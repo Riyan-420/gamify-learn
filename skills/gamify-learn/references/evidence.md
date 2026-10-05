@@ -6,7 +6,10 @@ This is a study tool, not a treatment. The design choices below were picked from
 |---|---|---|
 | **Short chunks, one idea per screen** | Pauses between short segments helped learners with ADHD more than others in a small 2026 study of programming video lessons. Segmenting also helps learners with lower working memory in multimedia research. | Small studies, promising |
 | **Testing yourself (quizzes, brain dumps, flashcards)** | Practice testing improved learning for college students with ADHD (medium effect, d about 0.5), but did not fix poor first encoding: teach well first, then test. | Moderate, replicated in the general population |
-| **Spaced review (1, 2, 4, 7, 14 days)** | Spacing beats cramming in the general learning literature; one small study found spaced or clustered schedules beat massed ones in students with ADHD symptoms. | Strong generally, thin for ADHD specifically |
+| **Spaced review (1, 2, 4, 7, 14 days) and relearning across quests** | Spacing beats cramming in the general learning literature (a meta-analysis of 184 studies found separating learning by at least a day helps retention). One small study found spaced or clustered schedules beat massed ones in students with ADHD symptoms. A meta-analysis of 29 studies on spacing out retrieval practice found **no significant difference between expanding and uniform schedules**, so the exact 1-2-4-7-14 pattern is a convenient choice, not a proven optimum; what matters is repeated, spaced retrieval. | Strong generally, thin for ADHD specifically |
+| **One direction + warm-ups that revisit earlier quests** | Follows from prerequisite-ordered instruction (novices have no schemas to fill gaps) and from spaced retrieval; the specific "locked linear path" is a design choice for focus, not an ADHD-tested intervention. Menu lets learners unlock everything. | Design choice, supported indirectly |
+| **Curiosity hooks: predict first, a question per quest, cliffhangers** | In the PACE framework, curiosity is triggered by prediction errors and information gaps and improves encoding (attention, exploration) and consolidation (dopaminergic modulation of the hippocampus). Gruber et al. (2014) found memory benefits for information learned in a curious state. Prediction errors can also cause anxiety, so keep guesses low-stakes. | Good lab evidence, mostly healthy adults, not ADHD-specific |
+| **Worked example, then fading into solving** | The worked-example effect (Sweller and Cooper, 1985) is well established for novices. Fading solution steps bridges to independent solving (Renkl, Atkinson and Grosse, 2004). The benefit shrinks or reverses as expertise grows (expertise reversal, Kalyuga et al., 2003), so scaffolding is reduced over the course. | Strong for novices in structured domains (maths, physics, programming) |
 | **Instant feedback, XP, levels** | A randomised trial of 80 children with ADHD found a gamified app improved attention and scores; a meta-analysis of 20 trials of game-based programs found small to moderate cognitive benefits with mixed results. | Mixed. This is why Calm mode exists |
 | **Novelty in structure, not decoration** | Adults with ADHD preferred novel options more, and that predicted worse performance in one study. Hence a fixed, predictable game structure rather than random flashy elements. | One study, suggestive |
 | **Movement breaks (focus timer)** | One bout of exercise gave small, short-lived attention gains in meta-analyses; effects are modest and vary. | Modest |
@@ -15,6 +18,21 @@ This is a study tool, not a treatment. The design choices below were picked from
 "Interest-based nervous system" is a popular label, not a tested model. The tool does not rely on it.
 
 ## Sources consulted
+
+### Added in v1.1 (learning line, curiosity, worked examples, spacing)
+
+- Gruber, Gelman, Ranganath (2014). States of curiosity modulate hippocampus-dependent learning via the dopaminergic circuit. *Neuron* 84(2).
+- Gruber and Ranganath (2019). How curiosity enhances hippocampus-dependent memory: the Prediction, Appraisal, Curiosity, and Exploration (PACE) framework. *Trends in Cognitive Sciences*. PMC6891259
+- Sweller and Cooper (1985). The use of worked examples as a substitute for problem solving in learning algebra. *Cognition and Instruction*.
+- Renkl, Atkinson, Grosse (2004). How fading worked solution steps works: a cognitive load perspective. *Instructional Science* 32. doi 10.1023/B:TRUC.0000021815.74806.f6
+- Kalyuga, Ayres, Chandler, Sweller (2003). The expertise reversal effect. *Educational Psychologist* 38(1). doi 10.1207/S15326985EP3801_4
+- Salden, Aleven, Schwonke, Renkl (2010). The expertise reversal effect and worked examples in tutored problem solving. *Instructional Science* 38. doi 10.1007/s11251-009-9107-8
+- Meta-analytic review of the benefit of spacing out retrieval practice episodes on retention (29 studies; expanding vs uniform spacing no significant difference). ERIC EJ1310148
+- Spacing meta-analysis summarised in the Australian Education Research Office *Spacing and retrieval practice* guide (184 studies; separating learning by at least one day helps long-term retention).
+
+These were checked from abstracts, summaries and secondary descriptions, not full papers.
+
+### Original set
 
 - Knouse, Rawson, Dunlosky (2016). Does testing improve learning for college students with ADHD? *Clinical Psychological Science*.
 - Retrieval practice benefits students with ADHD but does not compensate for poor encoding. *Frontiers in Psychology* (2023). doi 10.3389/fpsyg.2023.1186566

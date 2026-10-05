@@ -4,7 +4,7 @@
 const D=window.__COURSE;
 const SLUG=(D.slug||D.title||'course').toString().toLowerCase().replace(/[^a-z0-9]+/g,'-').slice(0,40);
 const KEY='gamify_learn_'+SLUG+'_v1';
-let S={xp:0,streak:0,last:'',ans:{},cards:{},done:{},dumps:{},hooks:{},badges:{},calm:false,sfx:false,tmin:D.focus_minutes||15,combo:0,best:0,raids:0,seen:false};
+let S={xp:0,streak:0,last:'',ans:{},cards:{},done:{},dumps:{},hooks:{},badges:{},calm:false,sfx:false,tmin:D.focus_minutes||15,combo:0,best:0,raids:0,seen:false,solves:{},unlockAll:false};
 try{Object.assign(S,JSON.parse(localStorage.getItem(KEY)||'{}'))}catch(e){}
 const save=()=>{try{localStorage.setItem(KEY,JSON.stringify(S))}catch(e){}};
 const $=(el,q)=>el.querySelector(q), $$=(el,q)=>[...el.querySelectorAll(q)];
@@ -53,21 +53,38 @@ const QUESTS=D.quests||[];const BANK={},CARDS={};
 QUESTS.forEach((q,i)=>{
   q.n=i+1;q.id=q.id||('q'+q.n);q.world=q.world||('1-'+q.n);q.minutes=q.minutes||12;
   q.quiz=(q.quiz||[]).map((x,j)=>{const id=q.id+'-'+(x.id||('q'+(j+1)));const o=Object.assign({},x,{id,quest:q.id});BANK[id]=o;return o});
-  q.cardsList=(q.cards||[]).map((c,j)=>{const id=q.id+'-c'+(j+1);CARDS[id]={f:c.front||c.f,b:c.back||c.b,quest:q.id};return id});
+  q.cardsList=(q.cards||[]).map((c,j)=>{const id=q.id+'-c'+(j+1);CARDS[id]={f:c.front||c.f,b:c.back||c.b,quest:q.id,concepts:c.concepts||[]};return id});
   q.steps=buildSteps(q);
 });
 function buildSteps(q){
-  const out=[{t:'mission'}];let quizPlaced=false,cardsPlaced=false;
+  const out=[{t:'mission'}];const placed=new Set();let cardsPlaced=false;
+  if(q.n>1&&q.warmup!==false&&QUESTS.slice(0,q.n-1).some(p=>p.quiz.length))out.push({t:'warmup'});
   (q.steps||[]).forEach(s=>{
-    if(s.type==='quiz'){const ids=(s.ids||q.quiz.map(x=>x.id.split('-').slice(1).join('-'))).map(x=>q.id+'-'+x);ids.forEach(id=>{if(BANK[id])out.push({t:'question',id})});quizPlaced=true}
+    if(s.type==='quiz'){const ids=(s.ids||q.quiz.map(x=>x.id.split('-').slice(1).join('-'))).map(x=>q.id+'-'+x);ids.forEach(id=>{if(BANK[id]&&!placed.has(id)){placed.add(id);out.push({t:'question',id})}})}
     else if(s.type==='cards'){out.push({t:'cards'});cardsPlaced=true}
     else out.push(Object.assign({t:s.type},s));
   });
-  if(!quizPlaced)q.quiz.forEach(x=>out.push({t:'question',id:x.id}));
+  q.quiz.forEach(x=>{if(!placed.has(x.id))out.push({t:'question',id:x.id})});
   if(!cardsPlaced&&q.cardsList.length)out.push({t:'cards'});
   out.push({t:'recap'});
   return out;
 }
+/* concept ledger: what is taught where, so the story stays in one direction and ideas can be relearned */
+const CON={};(D.concepts||[]).forEach(c=>{CON[c.id]=Object.assign({},c)});
+QUESTS.forEach((q,qi)=>q.steps.forEach((st,i)=>{(st.teaches||[]).forEach(id=>{CON[id]=CON[id]||{id,name:id.replace(/_/g,' ')};if(CON[id].quest==null){CON[id].quest=qi;CON[id].step=i}})}));
+const CONLIST=Object.values(CON).filter(c=>c.quest!=null).sort((a,b)=>a.quest-b.quest||a.step-b.step);
+const SOLVE={};QUESTS.forEach(q=>q.steps.forEach((st,i)=>{if(st.t==='solve')SOLVE[q.id+'-s'+i]={concepts:st.needs||[],quest:q.id,step:i,title:st.title}}));
+const cname=id=>(CON[id]&&CON[id].name)||id;
+const chips=ids=>ids.map(id=>'<span class="cchip">'+esc(cname(id))+'</span>').join(' ');
+function conceptNeeds(q){const qi=q.n-1,set=new Set(q.needs||[]);q.steps.forEach(st=>(st.needs||[]).forEach(c=>set.add(c)));return [...set].filter(c=>CON[c]&&CON[c].quest!=null&&CON[c].quest<qi)}
+function mastery(cid){let n=0;
+  Object.keys(BANK).forEach(id=>{if((BANK[id].concepts||[]).includes(cid)&&S.ans[id]&&S.ans[id].last)n++});
+  Object.keys(CARDS).forEach(id=>{if((CARDS[id].concepts||[]).includes(cid)&&S.cards[id]&&S.cards[id].box>=2)n++});
+  Object.keys(SOLVE).forEach(id=>{const r=S.solves[id];if(r&&r.r!=='no'&&SOLVE[id].concepts.includes(cid))n++});
+  return Math.min(3,n)}
+const FORCE=/[?&](reveal|selftest)/.test(location.search);
+const isLocked=i=>D.linear!==false&&!S.unlockAll&&!FORCE&&i>0&&!S.done[QUESTS[i-1].id];
+function track(cur){return '<div class="track">'+QUESTS.map((q,i)=>'<div class="tn '+(S.done[q.id]?'done':i===cur?'cur':'')+'" title="'+esc(q.title)+'"><span>'+(i+1)+'</span>'+(i===cur?'<em>YOU ARE HERE</em>':'')+'</div>').join('<s></s>')+'</div>'}
 
 /* ---------- audio (off by default) ---------- */
 let AC=null;
@@ -106,6 +123,7 @@ function addXP(n,why){
 }
 function levelUp(){
   const o=overlay('<div class="panel lvl"><div class="sprites">'+icon('star',6)+icon('trophy',6)+icon('star',6)+'</div><div class="big2">LEVEL '+lvl()+'!</div><p>Your brain just got a stronger save file. Keep going or take a break: both are wins.</p><button class="btn" data-x>CONTINUE</button></div>');
+  o.classList.add('lvlov');setTimeout(()=>o.remove(),4500);
 }
 const BADGES={
  first:['book','FIRST BLOOD','Answer your first question right'],
@@ -159,6 +177,7 @@ function menu(){
    '<div class="row2"><span>Sound effects (8-bit beeps)</span><button class="btn sm2 ghost" data-m="sfx">'+(S.sfx?'ON':'OFF')+'</button></div>'+
    '<div class="row2"><span>Calm mode (no motion, no sound)</span><button class="btn sm2 ghost" data-m="calm">'+(S.calm?'ON':'OFF')+'</button></div>'+
    '<div class="row2"><span>Focus block length</span><span><button class="btn sm2 ghost" data-m="t10">10</button> <button class="btn sm2 ghost" data-m="t15">15</button> <button class="btn sm2 ghost" data-m="t25">25</button> min</span></div>'+
+   '<div class="row2"><span>Unlock every quest (skips the one-direction path)</span><button class="btn sm2 ghost" data-m="unlock">'+(S.unlockAll?'ON':'OFF')+'</button></div>'+
    '<div class="row2"><span>Save file (progress lives in this browser)</span><span><button class="btn sm2 blue" data-m="exp">EXPORT</button> <button class="btn sm2 ghost" data-m="imp">IMPORT</button></span></div>'+
    '<div class="row2"><span>How this works + the research</span><button class="btn sm2 ghost" data-m="about">OPEN</button></div>'+
    '<div class="row2"><span>Start over</span><button class="btn sm2" data-m="reset">RESET</button></div>'+
@@ -169,13 +188,14 @@ function menu(){
     else if(/^t\d+$/.test(m)){S.tmin=+m.slice(1);tLeft=S.tmin*60;save();renderHud();toast('Focus block: '+S.tmin+' min')}
     else if(m==='exp'){const blob=new Blob([JSON.stringify({key:KEY,state:S},null,1)],{type:'application/json'});const a=document.createElement('a');a.href=URL.createObjectURL(blob);a.download=SLUG+'-progress.json';a.click()}
     else if(m==='imp'){const f=document.createElement('input');f.type='file';f.accept='.json';f.onchange=()=>{const r=new FileReader();r.onload=()=>{try{const j=JSON.parse(r.result);Object.assign(S,j.state||j);save();location.reload()}catch(err){toast('That file is not a progress file')}};r.readAsText(f.files[0])};f.click()}
+    else if(m==='unlock'){S.unlockAll=!S.unlockAll;save();b.textContent=S.unlockAll?'ON':'OFF';if(V.v==='map')render()}
     else if(m==='about'){o.remove();about()}
     else if(m==='reset'){if(confirm('Delete all progress in this browser?')){try{localStorage.removeItem(KEY)}catch(err){}location.reload()}}
   });
 }
 function about(){
   overlay('<div class="panel"><h2>How this works</h2>'+
-  '<ul class="lines"><li><b>Short quests.</b> One idea per screen, about '+(QUESTS[0]?QUESTS[0].minutes:12)+' minutes per quest. Press SPACE to reveal the next piece.</li>'+
+  '<ul class="lines"><li><b>One direction.</b> Quests unlock in order. Each idea is taught once, in the place where you are ready for it, and later quests reuse it.</li><li><b>Relearning on purpose.</b> Every quest opens with a warm-up from earlier quests, and your skill line shows each concept filling up as you get it right again and again.</li><li><b>Short quests.</b> One idea per screen, about '+(QUESTS[0]?QUESTS[0].minutes:12)+' minutes per quest. Press SPACE to reveal the next piece.</li>'+
   '<li><b>Predict, learn, test.</b> Guess first, read, then quiz yourself. Testing yourself is one of the best-supported study methods.</li>'+
   '<li><b>Wrong answers are data.</b> Misses go to a retry list and come back in boss raids.</li>'+
   '<li><b>Spaced review.</b> Flashcards return after 1, 2, 4, 7 and 14 days if you rate them honestly.</li>'+
@@ -187,7 +207,7 @@ function about(){
 
 /* ---------- routing ---------- */
 let V={v:'title'};
-function go(v){V=v;if(v.v==='quest'){S.seen=true}render();window.scrollTo(0,0);try{history.replaceState(null,'','#'+(v.v==='quest'?'q'+(v.q+1)+'/'+(v.i+1):v.v))}catch(e){}}
+function go(v){if(v.v==='quest'&&isLocked(v.q)){toast('Locked: finish the previous quest first. One direction keeps the story clear.');v={v:'map'}}V=v;if(v.v==='quest'){S.seen=true}render();window.scrollTo(0,0);try{history.replaceState(null,'','#'+(v.v==='quest'?'q'+(v.q+1)+'/'+(v.i+1):v.v))}catch(e){}}
 const qIdx=id=>QUESTS.findIndex(q=>q.id===id);
 function questDone(q){return !!S.done[q.id]}
 function qStats(q){const ids=q.quiz.map(x=>x.id);const tried=ids.filter(i=>S.ans[i]).length;const first=ids.filter(i=>S.ans[i]&&S.ans[i].first).length;return{tried,first,n:ids.length,pc:ids.length?Math.round(100*tried/ids.length):0,acc:tried?first/ids.length:0}}
@@ -219,21 +239,24 @@ function nextBest(){
   if(nq){const started=nq.steps.some(()=>false)||qStats(nq).tried>0;return{t:(started?'CONTINUE: ':'START: ')+nq.title,go:{v:'quest',q:qIdx(nq.id),i:0},q:nq}}
   return{t:'BOSS RAID: TEST EVERYTHING',go:{v:'raid'}};
 }
+function solveLoc(id){const x=SOLVE[id];return x?{v:'quest',q:qIdx(x.quest),i:x.step}:{v:'map'}}
 function rMap(){
   const nb=nextBest(),m=missIds().length,due=dueIds().length;
   const tot=Object.keys(S.ans).length,right=Object.values(S.ans).filter(a=>a.last).length;
-  const cards=QUESTS.map(q=>{const st=qStats(q);const stars=questDone(q)?(st.n&&st.first===st.n?3:st.acc>=.7?2:1):0;
-    return '<div class="qc'+(questDone(q)?' done':'')+(nb.q&&nb.q.id===q.id?' rec':'')+'" data-q="'+qIdx(q.id)+'" tabindex="0" role="button"><span class="w">WORLD '+esc(q.world)+'</span><h3>'+esc(q.title)+'</h3><div class="stars">'+[1,2,3].map(i=>icon('star',3).replace('<svg','<svg style="opacity:'+(i<=stars?1:.2)+'"')).join('')+'</div><div class="m">'+q.minutes+' min  |  '+q.quiz.length+' quiz Qs</div><div class="pb"><i style="width:'+st.pc+'%"></i></div></div>'}).join('');
+  const sids=Object.keys(SOLVE),sdone=sids.filter(id=>S.solves[id]&&S.solves[id].r!=='no').length,redo=sids.filter(id=>S.solves[id]&&S.solves[id].r==='no');
+  const cards=QUESTS.map((q,i)=>{const st=qStats(q),lock=isLocked(i);const stars=questDone(q)?(st.n&&st.first===st.n?3:st.acc>=.7?2:1):0;
+    return '<div class="qc'+(questDone(q)?' done':'')+(lock?' locked':'')+(nb.q&&nb.q.id===q.id?' rec':'')+'" data-q="'+i+'" tabindex="0" role="button"><span class="w">WORLD '+esc(q.world)+(lock?'  LOCKED':'')+'</span><h3>'+esc(q.title)+'</h3>'+(q.question?'<div class="qs">? '+fmt(q.question)+'</div>':'')+'<div class="stars">'+[1,2,3].map(k=>icon('star',3).replace('<svg','<svg style="opacity:'+(k<=stars?1:.2)+'"')).join('')+'</div><div class="m">'+q.minutes+' min  |  '+q.quiz.length+' quiz Qs</div><div class="pb"><i style="width:'+st.pc+'%"></i></div></div>'}).join('');
   const bd=Object.keys(BADGES).map(k=>'<div class="bd'+(S.badges[k]?'':' lock')+'">'+icon(BADGES[k][0],3)+'<span><b>'+BADGES[k][1]+'</b><br>'+BADGES[k][2]+'</span></div>').join('');
-  root.innerHTML='<div class="panel"><div class="chips"><span class="chip r">WORLD MAP</span></div><h1>'+esc(D.title)+'</h1><p class="mut" style="margin-top:8px">'+fmt(D.subtitle||'')+'</p>'+
-   '<div class="stats"><span class="stat2">'+icon('bolt',2)+'LV <b>'+lvl()+'</b></span><span class="stat2">'+icon('coin',2)+'<b>'+S.xp+'</b> XP</span><span class="stat2">'+icon('flame',2)+'STREAK <b>'+S.streak+'</b></span><span class="stat2">ANSWERED <b>'+tot+'</b>  RIGHT LAST TIME <b>'+right+'</b></span></div>'+
-   '<div class="row"><button class="btn big" data-a="nb">'+esc(nb.t)+'</button><button class="btn ghost sm2" data-a="review">DAILY REVIEW ('+due+')</button><button class="btn ghost sm2" data-a="retry">RETRY MISSES ('+m+')</button><button class="btn blue sm2" data-a="raid">BOSS RAID</button></div>'+
+  const tree=CONLIST.length?'<div class="panel"><h2>Skill line</h2><p class="mut sm" style="margin-bottom:10px">Every concept, in the order you learn it. Pips fill when you answer questions about it correctly across different quests: that is the relearning.</p><div class="tree">'+CONLIST.map(c=>{const mp=mastery(c.id);return '<span class="cn m'+mp+'" title="Taught in quest '+(c.quest+1)+'"><b>'+esc(c.name)+'</b><span class="pips">'+[0,1,2].map(k=>'<i class="pp'+(k<mp?' on':'')+'"></i>').join('')+'</span></span>'}).join('')+'</div></div>':'';
+  root.innerHTML='<div class="panel"><div class="chips"><span class="chip r">WORLD MAP</span></div><h1>'+esc(D.title)+'</h1><p class="mut" style="margin-top:8px">'+fmt(D.subtitle||'')+'</p>'+track(-1)+
+   '<div class="stats"><span class="stat2">'+icon('bolt',2)+'LV <b>'+lvl()+'</b></span><span class="stat2">'+icon('coin',2)+'<b>'+S.xp+'</b> XP</span><span class="stat2">'+icon('flame',2)+'STREAK <b>'+S.streak+'</b></span><span class="stat2">ANSWERED <b>'+tot+'</b>  RIGHT LAST TIME <b>'+right+'</b></span>'+(sids.length?'<span class="stat2">SOLVED <b>'+sdone+'/'+sids.length+'</b></span>':'')+'</div>'+
+   '<div class="row"><button class="btn big" data-a="nb">'+esc(nb.t)+'</button><button class="btn ghost sm2" data-a="review">DAILY REVIEW ('+due+')</button><button class="btn ghost sm2" data-a="retry">RETRY MISSES ('+m+')</button>'+(redo.length?'<button class="btn ghost sm2" data-a="redo">REDO SOLVES ('+redo.length+')</button>':'')+'<button class="btn blue sm2" data-a="raid">BOSS RAID</button></div>'+
    '<div class="todo"><span>Before you start (optional):</span><label><input type="checkbox">phone out of reach</label><label><input type="checkbox">water</label><label><input type="checkbox">60 s of movement</label><label><input type="checkbox">timer on (T)</label></div></div>'+
-   '<div class="qgrid">'+cards+'</div>'+
+   '<div class="qgrid">'+cards+'</div>'+tree+
    '<div class="panel" style="margin-top:34px"><h2>Badges</h2><div class="badges">'+bd+'</div></div>';
   root.onclick=e=>{const q=e.target.closest('.qc');if(q){go({v:'quest',q:+q.dataset.q,i:0});return}
     const a=e.target.closest('[data-a]');if(!a)return;SND.click();const k=a.dataset.a;
-    if(k==='nb')go(nb.go);else go({v:k})};
+    if(k==='nb')go(nb.go);else if(k==='redo')go(solveLoc(redo[0]));else go({v:k})};
   root.onkeydown=e=>{if(e.key==='Enter'&&e.target.classList.contains('qc'))e.target.click()};
 }
 
@@ -242,14 +265,14 @@ let gated=false,reveals=[],shown=0;
 function rQuest(){
   const q=QUESTS[V.q],s=q.steps[V.i];where='Q'+q.n+'  '+(V.i+1)+'/'+q.steps.length;
   gated=false;
-  const chip=({mission:'MISSION',predict:'PREDICT',idea:'LEARN',decode:'DECODER',worked:'WORKED EXAMPLE',lab:'LAB',figure:'FIGURE',dump:'RECALL',question:'QUIZ',cards:'FLASHCARDS',recap:'RECAP',html:'LEARN'})[s.t]||'STEP';
+  const chip=({mission:'MISSION',predict:'PREDICT',idea:'LEARN',decode:'DECODER',worked:'WORKED EXAMPLE',lab:'LAB',figure:'FIGURE',dump:'RECALL',question:'QUIZ',cards:'FLASHCARDS',recap:'RECAP',html:'LEARN',warmup:'WARM-UP',flow:'FLOW',compare:'COMPARE',solve:'YOUR TURN'})[s.t]||'STEP';
   const head='<div class="chips"><span class="chip r">'+chip+'</span><span class="chip">WORLD '+esc(q.world)+'  '+esc(q.title)+'</span></div>';
-  const R={mission:sMission,predict:sPredict,idea:sIdea,decode:sDecode,worked:sWorked,lab:sLab,figure:sFigure,dump:sDump,question:sQuestion,cards:sCards,recap:sRecap,html:sHtml}[s.t];
+  const R={mission:sMission,predict:sPredict,idea:sIdea,decode:sDecode,worked:sWorked,lab:sLab,figure:sFigure,dump:sDump,question:sQuestion,cards:sCards,recap:sRecap,html:sHtml,warmup:sWarmup,flow:sFlow,compare:sCompare,solve:sSolve}[s.t];
   if(!R){root.innerHTML='<div class="panel">Unknown step type: '+esc(s.t)+'</div>';return}
   root.innerHTML='<div class="panel">'+head+'<div id="body"></div></div>';
   const body=$(root,'#body');R(body,q,s);
   reveals=$$(body,'.rv');shown=0;navDraw(q);
-  if(/[?&]reveal/.test(location.search)){revealAll();if(s.t==='question'&&body._pick)body._pick(body._correct)}  /* ?reveal: show everything (screenshots, printing) */
+  if(/[?&]reveal/.test(location.search)){revealAll();navDraw(q);if(s.t==='question'&&body._pick)body._pick(body._correct)}  /* ?reveal: show everything (screenshots, printing) */
 }
 function navDraw(q){
   const q2=QUESTS[V.q],last=V.i===q2.steps.length-1;
@@ -281,9 +304,50 @@ function figHtml(s){
   return '<figure class="rv"><img src="'+s.src+'" alt="'+esc(s.caption||s.title||'figure')+'">'+(s.caption?'<figcaption>'+fmt(s.caption)+(s.credit?' <span class="mut">('+esc(s.credit)+')</span>':'')+'</figcaption>':'')+'</figure>';
 }
 function sMission(b,q){
-  b.innerHTML='<h1>'+esc(q.title)+'</h1><p class="mut" style="margin:8px 0 16px">'+q.minutes+' min  |  '+q.steps.length+' steps  |  '+q.quiz.length+' quiz questions  |  go at your own pace</p>'+
+  const i=q.n-1,prev=QUESTS[i-1];
+  const taught=[];q.steps.forEach(st=>(st.teaches||[]).forEach(id=>taught.push(id)));
+  const needed=conceptNeeds(q);
+  b.innerHTML=track(i)+'<h1>'+esc(q.title)+'</h1><p class="mut" style="margin:8px 0 14px">'+q.minutes+' min  |  '+q.steps.length+' steps  |  '+q.quiz.length+' quiz questions  |  go at your own pace</p>'+
+   (q.question?'<div class="co ana"><small>THE QUESTION THIS QUEST ANSWERS</small>'+fmt(q.question)+'</div>':'')+
+   (prev?'<div class="co say"><small>LAST TIME</small>'+fmt(q.previously||('You finished <b>'+esc(prev.title)+'</b>. This quest builds directly on it.'))+'</div>':'')+
+   (needed.length?'<div class="co eg"><small>YOU WILL USE (FROM EARLIER)</small>'+chips(needed)+'</div>':'')+
+   (taught.length?'<div class="co keep"><small>NEW IN THIS QUEST</small>'+chips(taught)+'</div>':'')+
    '<h3>BY THE END YOU CAN...</h3><ul class="lines">'+(q.outcomes||[]).map(o=>'<li>'+fmt(o)+'</li>').join('')+'</ul>'+
    '<div class="co say"><small>TOO MUCH?</small>Do just the next 3 screens (2 minutes). Starting is the hard part; momentum is free after that.</div>';
+}
+function sWarmup(b,q){
+  const qi=q.n-1,need=new Set(conceptNeeds(q)),pool=[];
+  QUESTS.slice(0,qi).forEach(p=>p.quiz.forEach(x=>pool.push(x)));
+  const wp=[];pool.forEach(x=>{const a=S.ans[x.id];let k=a?(a.last===false?4:1):2;if((x.concepts||[]).some(c=>need.has(c)))k+=3;for(let j=0;j<k;j++)wp.push(x.id)});
+  const pick=[];shuffle(wp).forEach(id=>{if(pick.length<3&&!pick.includes(id))pick.push(id)});
+  gate(true);
+  b.innerHTML='<h2>Warm-up: pull it from memory</h2><p class="mut">Three quick questions from earlier quests, picked because this quest leans on them. Remembering before you learn keeps old ideas alive. Wrong answers are fine here.</p><div id="wu"></div>';
+  let i=0,ok=0;
+  (function draw(){
+    const box=$(b,'#wu');
+    if(i>=pick.length){box.innerHTML='<div class="co keep" style="display:block"><small>WARM-UP DONE</small>'+ok+' of '+pick.length+' right. The new idea builds on exactly these.</div>';addXP(3+ok,'warm-up');gate(false);return}
+    box.innerHTML='<p class="chip" style="display:inline-block;margin-bottom:10px">'+(i+1)+' / '+pick.length+'</p><div id="wq"></div>';
+    bindQuiz($(box,'#wq'),BANK[pick[i]],good=>{if(good)ok++;i++;draw()});
+  })();
+}
+function sFlow(b,q,s){
+  const N=s.nodes||[];
+  b.innerHTML='<h2>'+fmt(s.title)+'</h2>'+(s.intro?'<p>'+fmt(s.intro)+'</p>':'')+'<div class="flow">'+N.map((n,i)=>'<div class="fstep rv">'+(i?'<span class="arr"></span>':'')+'<div class="node" style="--c:var(--k'+(i%6)+')"><div class="nl">'+fmt(n.label)+'</div>'+(n.sub?'<div class="ns">'+fmt(n.sub)+'</div>':'')+'</div></div>').join('')+'</div>'+li(s.lines)+vizHtml(s.viz)+co('keep','KEEP THIS',s.keep)+co('trap','TRAP',s.trap);
+}
+function sCompare(b,q,s){
+  const H=s.headers||['A','B'];
+  b.innerHTML='<h2>'+fmt(s.title)+'</h2>'+(s.intro?'<p>'+fmt(s.intro)+'</p>':'')+'<div class="cmp"><div class="crow chd"><span></span><span>'+fmt(H[0])+'</span><span>'+fmt(H[1])+'</span></div>'+(s.rows||[]).map(r=>'<div class="crow rv"><span class="cl">'+fmt(r[0])+'</span><span>'+fmt(r[1])+'</span><span>'+fmt(r[2])+'</span></div>').join('')+'</div>'+co('keep','KEEP THIS',s.keep)+co('trap','TRAP',s.trap);
+}
+function sSolve(b,q,s){
+  const id=q.id+'-s'+V.i,Hs=s.hints||[];let used=0;gate(true);
+  b.innerHTML='<h2>'+fmt(s.title||'Your turn')+'</h2><div class="prob">'+fmt(s.problem)+'</div><p class="mut">Work it out on paper first. Hints come one at a time and using them is fine: that is how the skill sticks.</p><div id="hs"></div><div class="row"><button class="btn ghost sm2" data-k="hint">HINT ('+Hs.length+' LEFT)</button><button class="btn blue sm2" data-k="show">SHOW SOLUTION</button></div><div id="sol" style="display:none"></div>';
+  const hb=$(b,'[data-k=hint]');if(!Hs.length)hb.style.display='none';
+  hb.onclick=()=>{if(used<Hs.length){$(b,'#hs').insertAdjacentHTML('beforeend','<div class="co say"><small>HINT '+(used+1)+'</small>'+fmt(Hs[used])+'</div>');used++;hb.textContent='HINT ('+(Hs.length-used)+' LEFT)';if(used>=Hs.length)hb.disabled=true}};
+  $(b,'[data-k=show]').onclick=e=>{
+    e.target.disabled=true;hb.disabled=true;const sol=$(b,'#sol');sol.style.display='block';
+    sol.innerHTML='<ol class="steps">'+(s.steps||[]).map(x=>'<li><span class="sl">'+fmt(x.label)+'</span><span class="sw">'+fmt(x.work)+'</span></li>').join('')+'</ol><div class="final">'+fmt(s.answer)+'</div><h3 style="margin-top:14px">HOW DID IT GO? BE HONEST.</h3><div class="row"><button class="btn good sm2" data-r="got">I GOT IT</button><button class="btn blue sm2" data-r="hint">GOT IT WITH HINTS</button><button class="btn sm2" data-r="no">NOT YET</button></div>';
+    $$(sol,'[data-r]').forEach(bt=>bt.onclick=()=>{const r=bt.dataset.r;S.solves[id]={r,h:used};save();addXP(r==='got'?(used?5:8):r==='hint'?4:1,r==='no'?'honest rating':'solved');if(r==='no')toast('Saved. Redo it from the map when ready.');gate(false);$$(sol,'[data-r]').forEach(x=>x.disabled=true)});
+  };
 }
 function sPredict(b,q,s){
   const id=q.id+'-p'+V.i;
@@ -424,10 +488,15 @@ function rReview(){
 
 /* ---------- recap / quest complete ---------- */
 function sRecap(b,q){
-  const R=q.recap||{};const st=qStats(q);
-  b.innerHTML='<h2>Quest '+q.n+' recap</h2><ul class="lines">'+(R.lines||(q.outcomes||[])).map(l=>'<li>'+fmt(l)+'</li>').join('')+'</ul>'+
-   (R.teach?'<div class="co keep"><small>TEACH-BACK  30 SECONDS</small>'+fmt(R.teach)+'</div>':'<div class="co keep"><small>TEACH-BACK  30 SECONDS</small>Explain this quest out loud as if to a friend who has never heard of it. Where you get stuck is what to re-read.</div>')+
-   '<div class="co eg"><small>QUEST RESULT</small>First-try score: <b>'+st.first+' / '+st.n+'</b> questions.</div><div class="sprites" style="justify-content:flex-start">'+icon('trophy',5)+icon('star',5)+'</div><button class="btn big" data-k="m">BACK TO THE MAP</button>';
+  const R=q.recap||{},st=qStats(q),nx=QUESTS[q.n];
+  const taught=[];q.steps.forEach(x=>(x.teaches||[]).forEach(id=>taught.push(id)));
+  const hook=q.next_hook||(nx&&nx.question)||(nx&&('Next: '+nx.title));
+  b.innerHTML=track(q.n-1)+'<h2>Quest '+q.n+' recap</h2><ul class="lines">'+(R.lines||(q.outcomes||[])).map(l=>'<li>'+fmt(l)+'</li>').join('')+'</ul>'+
+   (taught.length?'<div class="co keep"><small>YOU NOW KNOW</small>'+chips(taught)+'</div>':'')+
+   (R.teach?'<div class="co ana"><small>TEACH-BACK  30 SECONDS</small>'+fmt(R.teach)+'</div>':'<div class="co ana"><small>TEACH-BACK  30 SECONDS</small>Explain this quest out loud as if to a friend who has never heard of it. Where you get stuck is what to re-read.</div>')+
+   '<div class="co eg"><small>QUEST RESULT</small>First-try score: <b>'+st.first+' / '+st.n+'</b> questions.</div>'+
+   (hook?'<div class="co say"><small>NEXT UP</small>'+fmt(hook)+'</div>':'')+
+   '<div class="sprites" style="justify-content:flex-start">'+icon('trophy',5)+icon('star',5)+'</div><button class="btn big" data-k="m">'+(nx?'BACK TO THE MAP':'BACK TO THE MAP')+'</button>';
   $(b,'[data-k=m]').onclick=()=>go({v:'map'});
   if(!S.done[q.id]){S.done[q.id]=true;save();SND.lvl();confetti(40);addXP(25,'quest '+q.n+' complete');award('clear1');if(st.n&&st.first===st.n)award('perfect');if(QUESTS.every(x=>S.done[x.id]))award('allclear')}
 }
@@ -485,7 +554,7 @@ addEventListener('keydown',e=>{
   const tg=e.target;if(['TEXTAREA','INPUT'].includes(tg.tagName)&&tg.type!=='checkbox'&&tg.type!=='range'){if(e.key==='Escape'){const t=topOverlay();t&&t.remove()}return}
   const k=e.key;
   if(k==='Escape'){const t=topOverlay();if(t){t.remove();return}}
-  if(topOverlay())return;
+  if(topOverlay()){const t=topOverlay();if(t.classList.contains('lvlov')){t.remove();e.preventDefault()}return}
   if(k==='g'||k==='G'){glToggle(true);return}
   if(k==='h'||k==='H'){go({v:'map'});return}
   if(k==='r'||k==='R'){go({v:'review'});return}
@@ -512,6 +581,7 @@ function selftest(){
 
 /* ---------- start ---------- */
 renderHud();
+if(/[?&]reveal/.test(location.search))document.body.classList.add('static');
 if(/[?&]selftest/.test(location.search)){selftest()}
 else{
   const m=location.hash.match(/^#q(\d+)\/(\d+)$/);

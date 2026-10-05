@@ -1,62 +1,78 @@
 ---
 name: gamify-learn
-description: Turn course material (lecture slides, PDFs, notes, textbook chapters, a syllabus, or just a topic) into a retro-game-style study game, delivered as one offline HTML file. Short quests, every formula and symbol decoded in plain words, live sliders, quizzes that explain wrong answers, spaced flashcards, boss raids. Use when the user wants to learn or revise from material, asks for gamified or interactive study material, is preparing for a quiz or exam, says they have ADHD or cannot focus on long slides, or complains that slides show formulas without explaining what things are.
+description: Turn course material (lecture slides, PDFs, notes, textbook chapters, a syllabus, or just a topic) into a retro-game study game, one offline HTML file, that teaches in one straight line from zero to solving problems. Quests unlock in order, every idea is taught once and then deliberately relearned, every formula is decoded symbol by symbol, labs show each symbol acting, and the finale is solving. Built on ADHD and learning-science research. Use when the user wants to learn or revise from material, wants gamified or interactive study material, is preparing for a quiz or exam, says they have ADHD or cannot focus on long slides, or complains that slides show formulas without explaining what things are.
 ---
 
 # gamify-learn
 
-Turn source material into a single-file study game. You write a `course.json`; the bundled engine turns it into a retro (light-blue sky, red) HTML game with XP, levels, streaks, badges, boss raids and spaced review. No server, no internet, no dependencies.
+You write a `course.json`; the bundled engine turns it into a retro (light-blue sky, red) HTML game with XP, levels, streaks, badges, boss raids, quizzes and spaced review. No server, no internet, no dependencies.
 
-The teaching is the point, the game is the wrapper. A game that shows a formula without saying what each symbol IS has failed, however pretty it is.
+**The teaching is the point, the game is the wrapper.** The learner may have ADHD and has never seen the topic. They want maximum learning, interest that stays high, concepts relearned several times, everything linked into one story, and to finish able to *solve* problems. Everything below serves that.
+
+## The Learning Line (non-negotiable)
+
+1. **One direction.** Build a prerequisite map of the source, then order quests along it. Each concept is **taught exactly once**, in the quest where the learner is ready for it, and **never referenced before it is taught**. No jumping around, no mixing topics in a quest. The engine locks quests in order (Menu can unlock) and `validate.py` rejects forward references.
+2. **A story spine.** Every quest has a `question` (a curiosity gap the quest closes), a `previously` (how it grows out of the last quest) and a `next_hook` (the cliffhanger into the next one). Reuse one running example across quests when you can. The learner should always know: where am I, how did I get here, what comes next.
+3. **Relearn on purpose.** A concept taught once is forgotten. Every concept needs **3 or more touchpoints after it is taught, at least one in a later quest**: quiz questions and flashcards tagged with `concepts`, worked/lab/solve steps that list it in `needs`. The engine adds an automatic **warm-up** to every quest (3 questions from earlier quests, weighted toward what this quest needs and what was missed), a **skill line** where each concept's pips fill as it is answered correctly across quests, spaced flashcards (1, 2, 4, 7, 14 days) and mixed-topic boss raids.
+4. **Teach, check, apply, solve.** After each new idea, a quick quiz question (retrieval, not re-reading). Then a worked example, then fading support: a `solve` step with a hint ladder, then solve steps with fewer hints. The **last quest is a capstone of `solve` steps** that mix everything learned. Done means: can solve it without the steps.
+5. **See it.** Every quest has something visual: `lab` (sliders, live plot or SVG), `flow` (a process as boxes and arrows), `compare` (side-by-side table), `figure`, or an SVG `viz`. Real figures from the source are welcome (for the learner's own use).
+6. **Keep interest high.** Open each quest with a `predict`. Never more than 3 passive screens in a row (validator warns): alternate learn / do. Short quests (8 to 14 screens, about 12 minutes), quick wins first, curiosity questions, visible progress. No decoration that competes with the content; novelty belongs in the structure, not in random flash.
+
+## Research behind these rules
+
+Full notes, limits and sources in `references/evidence.md`. Summary the assistant must keep in mind (and tell the user honestly: most ADHD studies are small or with children; gamification evidence is mixed):
+
+| Finding | Design rule |
+|---|---|
+| Short segments with pauses helped learners with ADHD more than others in a small 2026 study; segmentation helps lower working memory | One idea per screen, ~12-minute quests, lines reveal one at a time |
+| Practice testing helps college students with ADHD (d about 0.5) but does **not** repair poor first encoding | Teach clearly first, then test: quiz after every idea, never instead of explaining |
+| Spaced practice beats massing; a meta-analysis of spaced retrieval found expanding vs uniform spacing about equal | Relearn in later quests and across days; the schedule matters less than the repeated, spaced retrieval |
+| Curiosity (prediction errors, information gaps) boosts encoding and consolidation (PACE framework) | `predict` first, a `question` per quest, cliffhanger `next_hook` |
+| Worked examples help novices; fading steps into problems is the bridge; they lose value as expertise grows (expertise reversal) | worked then `solve` with hint ladder then capstone; do not over-scaffold late |
+| Feedback + levels helped attention and scores in one RCT; game-based programs show small to moderate, mixed effects | XP, streaks, badges as a thin layer; **Calm mode** switches them off |
+| Adults with ADHD chose novelty more and did worse | Fixed, predictable structure; no random flashy elements |
+| One exercise bout gave small, short attention gains; body doubling inconclusive | Optional focus timer with a movement break; suggest, do not claim |
+
+"Interest-based nervous system" is a popular label, not a tested model: do not present it as science.
 
 ## Workflow
 
-1. **Ask before assuming** (max 3 short questions, skip what the user already said):
-   - Where is the material, and which parts matter (whole course? one lecture? exam topics)?
-   - How much do they already know? Default assumption: **zero**. Every symbol, abbreviation and term gets explained.
-   - Exam format or deadline (multiple choice? derivations? how many days?). This sets quiz style and quest count.
-2. **Extract.** `python scripts/extract_text.py <file-or-folder> -o extracted` (pdf, pptx, docx, txt, md, html; add `--images` to save pptx pictures). If a PDF is scanned (no text), say so and ask for another source or use OCR if available. Read the extracted text fully before planning.
-3. **Plan quests.** Write a coverage list: every topic in the source mapped to a quest. One quest = one idea cluster, about 8 to 14 screens, about 12 minutes. Order them as a story (each quest should lean on the previous one; say so). Show the plan to the user in a few lines and let them adjust before you write 10,000 words of JSON.
-4. **Author `course.json`.** Follow `references/authoring-guide.md` (teaching rules, mandatory) and `references/schema.md` (fields). Start from `examples/compound-interest/course.json` if you want a working pattern to copy.
+1. **Ask before assuming** (max 3 short questions, skip what is already known): where is the material and which parts matter; how much do they already know (default **zero**); exam format/deadline.
+2. **Extract.** `python scripts/extract_text.py <file-or-folder> -o extracted` (pdf, pptx, docx, txt, md, html; `--images` saves pptx pictures). Scanned PDFs have no text: say so. Read all of it before planning.
+3. **Map the line.** Write the prerequisite map: every concept in the source, what it depends on, the order that respects the dependencies, and which quest teaches it. Group into quests of at most about 5 new concepts. Resolve conflicts between lecture and book openly. **Show the user the ordered quest list and the concept list and get a yes before writing the JSON.** Add a last capstone quest.
+4. **Author `course.json`** following `references/authoring-guide.md` (how to teach), `references/learning-line.md` (how to sequence and relearn) and `references/schema.md` (fields). Copy `examples/compound-interest/course.json`: it uses every feature.
 5. **Check, build, test.**
    ```
-   python scripts/validate.py course.json
+   python scripts/validate.py course.json --strict
    python scripts/build.py course.json -o <Name>.html
    python scripts/smoke_test.py <Name>.html
    ```
-   Fix every ERROR. Read every warning and fix the ones that apply. Add `?reveal` to the URL to see every screen fully revealed (useful for screenshots or printing).
-6. **Look at it.** Open the HTML (or screenshot it) and check at least one decoder screen, one lab, one quiz screen and the map. Report honestly what you verified and what you did not.
-7. **Hand over.** Tell the user the file path, how to start (open in any browser; progress saves in that browser, use Menu then Export to move it), the quest list, and which source topics are covered or deliberately left out.
+   Fix every ERROR. In `--strict` mode every warning must be fixed or consciously accepted (and told to the user). `?reveal` on the URL shows every screen fully (screenshots, printing).
+6. **Look at it.** Open or screenshot at least: the map, a mission screen, a decoder, a lab, a warm-up, a solve step. Say honestly what you checked.
+7. **Hand over.** File path; how to start (double-click, any browser; progress saves in that browser, Menu then Export); the quest list as a story; which source topics are covered or left out; the honest limits.
 
-## Non-negotiable teaching rules
+## Teaching rules inside every quest
 
-- **Decode every formula.** Any equation, symbol or abbreviation appears first in a `decode` step: formula on top, then one card per symbol with name, plain-words meaning, and the **effect** (what happens to the answer when it goes up). Colour-link with `[[0|x]]`. Say how to read it aloud. No orphan symbols, ever.
-- **Concrete before abstract.** Order: question to guess (`predict`), analogy or everyday picture, tiny example, then the formal rule. Never open with the definition.
-- **Show it moving.** If a formula has parameters, add a `lab` with sliders and a plot so the learner pulls every lever. Write `tries` that say what to do and what to notice.
-- **Worked examples with real numbers.** Every number is computed (run Python, do not do it in your head) and every step is labelled. State units.
-- **Name the traps.** Add a `trap` for the mistake that costs marks (units, sign, off-by-one, confusing two similar things).
-- **Retrieval beats re-reading.** Each quest ends with a 60-second brain dump, 5 to 10 quiz questions (3 plausible distractors, a `why` that explains the right answer and the tempting wrong one), and 5 to 10 flashcards.
-- **Chunk.** At most 5 lines per `idea`, one thought per line, under about 25 words. Split long quests.
-- **Define on first use.** Add every term and symbol to the top-level `glossary` (the learner opens it with G).
-- **Do not invent.** Everything must trace to the source or to well-established facts you are sure of. If the source is unclear or contradicts itself, say so to the user instead of smoothing it over. Put the source section in quiz `tag`s (for example `L2 §3`) so the learner can find it.
-- **Figures.** Reuse real figures from the source only for the user's own study, with a caption that says what to look at and a `credit`. Do not publish copyrighted figures. When you cannot or should not reuse one, draw it with a `lab` plot or an inline SVG.
-
-## Design choices already made (do not fight them)
-
-- Retro look: light-blue sky, red accents, pixel fonts embedded in the file. Calm mode (Menu) switches off motion and sound for people who find the game layer distracting.
-- Sound is off by default. No timers that punish. Misses go to a retry list and return in raids; a missed raid question comes back once before the boss falls.
-- Games are a wrapper. The evidence for gamification is mixed (see `references/evidence.md`); the evidence for short chunks, testing yourself and spaced review is stronger. Do not oversell it to the user.
+- **Decode every formula.** A `decode` step: formula, how to say it aloud, then per symbol a card with name, plain-words meaning and the **effect** of raising it. `[[0|x]]` colour-links formula to cards. No orphan symbol, no undefined abbreviation (glossary too).
+- **Concrete before abstract:** guess, picture/analogy, tiny example, then the rule.
+- **Show it moving:** parameters get a lab; write `tries` that say what to do and notice.
+- **Real numbers, computed:** run Python for every worked and solve value; label every step; state units; add a sanity check.
+- **Name the trap** that costs marks.
+- **Quiz well:** tempting distractors, `why` explains the right answer and the best wrong one, `tag` points to the source section, `concepts` lists what it tests.
+- **Do not invent.** Everything traces to the source or to facts you are sure of. If the source is unclear, wrong or inconsistent, tell the user rather than smoothing it over.
+- **Figures and copyright:** reuse source figures only for the user's own study, with caption and `credit`. Never publish copyrighted material.
 
 ## Files in this skill
 
 | Path | What |
 |---|---|
 | `scripts/extract_text.py` | pdf / pptx / docx / html to text (and pptx images) |
-| `scripts/validate.py` | schema errors plus teaching-quality warnings |
+| `scripts/validate.py` | schema errors, the one-direction concept ledger, teaching-quality warnings (`--strict`) |
 | `scripts/build.py` | course.json to one self-contained HTML |
 | `scripts/smoke_test.py` | headless Chrome renders every screen and checks the lab maths |
-| `assets/engine/` | the game (CSS, JS, template) and `assets/fonts/` (OFL pixel fonts) |
+| `assets/engine/`, `assets/fonts/` | the game (CSS, JS, template) and OFL pixel fonts |
+| `references/learning-line.md` | how to sequence, link and relearn |
+| `references/authoring-guide.md` | how to write a course that teaches |
 | `references/schema.md` | every field of course.json |
-| `references/authoring-guide.md` | how to write a course that actually teaches |
-| `references/evidence.md` | the research behind the design, with honest limits |
-| `examples/compound-interest/` | complete demo course + built game |
+| `references/evidence.md` | the research, with honest limits and sources |
+| `examples/compound-interest/` | four-quest demo course + built game |

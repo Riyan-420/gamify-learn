@@ -1,6 +1,6 @@
 # Authoring guide: how to write a course that teaches
 
-Read this before writing any `course.json`. The engine is the easy part. Whether someone with zero background can learn everything and then solve exam questions depends on what you write.
+Read this and `learning-line.md` (sequencing, linking, relearning) before writing any `course.json`. The engine is the easy part. Whether someone with zero background can learn everything and then solve exam questions depends on what you write.
 
 ## The test you must pass
 

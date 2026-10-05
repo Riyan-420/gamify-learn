@@ -22,12 +22,16 @@ Relative image paths (`"src": "fig/a.png"`) are inlined as base64 by `build.py`,
   "about": "Optional note shown in How it works",
   "lang": "en",
   "focus_minutes": 15,
+  "linear": true,
+  "concepts": [{"id": "principal", "name": "Principal (P)"}],
   "glossary": [{"term": "Principal (P)", "meaning": "...", "where": "Quest 1"}],
   "quests": [ ... ]
 }
 ```
 
 `slug` namespaces the saved progress in the browser. Give every course its own slug.
+`linear` (default true) locks each quest until the previous one is finished; the learner can switch the lock off in Menu.
+`concepts` gives display names to concept ids (ids used in `teaches`, `needs`, `concepts`). Any id used in `teaches` is added automatically with a prettified name if you leave it out. See `learning-line.md`.
 
 ## Quest
 
@@ -38,6 +42,11 @@ Relative image paths (`"src": "fig/a.png"`) are inlined as base64 by `build.py`,
   "world": "1-1",                // label on the map, optional
   "minutes": 12,
   "outcomes": ["Can do X", "Can say Y"],   // required, shown as 'by the end you can...'
+  "question": "The curiosity gap this quest closes",       // strongly recommended
+  "previously": "How this grows out of the last quest",    // quests 2+, shown on the mission screen
+  "next_hook": "Cliffhanger into the next quest",          // shown on the recap
+  "needs": ["concept_id"],       // concepts from earlier quests this quest leans on (warm-up uses it)
+  "warmup": true,                // set false to drop the automatic warm-up
   "steps": [ ... ],              // see step types
   "quiz": [ ... ],               // 5-10 questions
   "cards": [ ... ],              // 5-10 flashcards
@@ -45,7 +54,11 @@ Relative image paths (`"src": "fig/a.png"`) are inlined as base64 by `build.py`,
 }
 ```
 
-Quiz questions are appended after the steps automatically (or placed where you put a `{"type":"quiz"}` step; optional `"ids": ["q1","q2"]`). Flashcards likewise (`{"type":"cards"}`). A mission screen is added first and a recap last.
+Quiz questions are placed where you put a `{"type":"quiz","ids":["q1"]}` step (mid-quest checks right after the idea they test); any not placed are appended after the steps. Flashcards likewise (`{"type":"cards"}`, otherwise appended). The engine adds a mission screen first (with the story track, question, last time, concepts you will use and the new ones), an automatic **warm-up** after it for quests 2+ (3 questions from earlier quests), and a recap last (concepts you now know, next up).
+
+## Concept ledger fields (on any step)
+
+`"teaches": ["id"]` introduces concepts (each id exactly once in the whole course). `"needs": ["id"]` uses concepts taught earlier. `validate.py` rejects forward references and double teaching. Quiz questions and cards take `"concepts": ["id"]` (what they test). These tags drive the warm-ups, the skill line and the relearning checks.
 
 ## Step types
 
@@ -93,6 +106,18 @@ Live sliders. Evaluate JavaScript expressions over control ids; `Math` functions
 A picture from the source with a purpose.
 `{"type":"figure","title":"...","src":"fig/a.png","caption":"Look at the red arrow: ...","credit":"Lecture 2, slide 14","lines":["optional bullets"],"keep":"..."}` or `"svg":"<svg>...</svg>"` instead of `src`.
 
+### flow
+A process as boxes and arrows that appear one at a time. Use it for pipelines, loops, algorithms, causal chains.
+`{"type":"flow","title":"...","intro":"...","nodes":[{"label":"START","sub":"Balance B = $1,000"},{"label":"SLICE","sub":"Interest = B x r"}],"lines":["optional"],"keep":"...","trap":"..."}`
+
+### compare
+Side-by-side table, one row per reveal. Use it for two similar things people confuse.
+`{"type":"compare","title":"...","headers":["Simple","Compound"],"rows":[["Interest is paid on","original deposit only","deposit plus earned interest"]],"keep":"..."}`
+
+### solve
+"Your turn": problem, then a hint ladder, then the solution after the attempt. The learner rates themselves (got it / with hints / not yet). Not-yet solves can be redone from the map. Awards XP and counts as a relearning touchpoint for its `needs`.
+`{"type":"solve","title":"Your turn 1","problem":"...","hints":["nudge","method","near-answer"],"steps":[{"label":"...","work":"..."}],"answer":"...","needs":["concept_id"]}`
+
 ### dump
 60-second brain dump. Learner types or speaks, then ticks what they remembered.
 `{"type":"dump","prompt":"...","points":["checklist item","..."]}`
@@ -108,13 +133,13 @@ Placement markers (see Quest).
 ```json
 {"id":"q1","q":"Question text","answer":"Correct option",
  "wrong":["Distractor 1","Distractor 2","Distractor 3"],
- "why":"Why it is right AND what the tempting wrong answer gets wrong","tag":"DECODER"}
+ "why":"Why it is right AND what the tempting wrong answer gets wrong","tag":"DECODER","concepts":["rate"]}
 ```
 Options are shuffled every time. 2 to 3 distractors; 3 is best. `id` is optional (auto q1, q2...).
 
 ## Flashcard
 
-`{"front":"Question or term","back":"Answer"}` (also accepts `f` / `b`).
+`{"front":"Question or term","back":"Answer","concepts":["principal"]}` (also accepts `f` / `b`).
 
 ## Glossary entry
 
@@ -123,7 +148,7 @@ Options are shuffled every time. 2 to 3 distractors; 3 is best. `id` is optional
 ## URL switches (for you, not the learner)
 
 - `?selftest` renders every screen and writes the result into `<pre id="selftest">`.
-- `?reveal` reveals every hidden piece on each screen and auto-answers quiz questions (screenshots, printing).
+- `?reveal` reveals every hidden piece on each screen, auto-answers quiz questions, stops animation and bypasses the quest lock (screenshots, printing).
 - `#q2/5` jumps to quest 2, screen 5. `#map`, `#title`.
 
 ## Learner keys

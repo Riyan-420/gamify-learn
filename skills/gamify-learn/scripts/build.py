@@ -70,6 +70,7 @@ def main():
     ap.add_argument("course")
     ap.add_argument("-o", "--out")
     ap.add_argument("--no-validate", action="store_true")
+    ap.add_argument("--strict", action="store_true", help="treat validation warnings as errors")
     a = ap.parse_args()
 
     course_path = os.path.abspath(a.course)
@@ -84,8 +85,8 @@ def main():
             print("  warn :", w)
         for e in errs:
             print("  ERROR:", e)
-        if errs:
-            print(f"{len(errs)} error(s). Fix them or pass --no-validate.")
+        if errs or (a.strict and warns):
+            print(f"{len(errs)} error(s), {len(warns) if a.strict else 0} warning(s) counted as errors. Fix them or pass --no-validate.")
             sys.exit(1)
 
     inline_images(course, os.path.dirname(course_path))
