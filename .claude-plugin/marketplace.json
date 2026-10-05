@@ -1,0 +1,14 @@
+{
+  "name": "gamify-learn",
+  "owner": {
+    "name": "Riyan Khan Durrani"
+  },
+  "plugins": [
+    {
+      "name": "gamify-learn",
+      "source": "./",
+      "description": "Turn course material into a retro-game study game (one offline HTML file)."
+    }
+  ],
+  "description": "Study-game skills: turn course material into retro-style, ADHD-friendly quests, decoders, labs and quizzes."
+}

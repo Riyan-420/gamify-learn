@@ -1,0 +1,10 @@
+{
+  "name": "gamify-learn",
+  "description": "Turn course material into a retro-game study game: short quests, every formula decoded symbol by symbol, live sliders, quizzes, spaced flashcards. One offline HTML file.",
+  "version": "1.0.0",
+  "author": { "name": "Riyan Khan Durrani" },
+  "homepage": "https://github.com/Riyan-420/gamify-learn",
+  "repository": "https://github.com/Riyan-420/gamify-learn",
+  "license": "MIT",
+  "keywords": ["education", "study", "adhd", "gamification", "quiz", "flashcards"]
+}

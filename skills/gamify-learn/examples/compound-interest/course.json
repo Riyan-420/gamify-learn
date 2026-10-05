@@ -1,0 +1,171 @@
+{
+  "title": "Compound Interest",
+  "slug": "compound-interest",
+  "subtitle": "Why money grows like a snowball. Two short quests, one formula decoded symbol by symbol, live sliders.",
+  "about": "This is the demo course that ships with the gamify-learn skill. It is original content written to show every step type: predict, idea, decoder, worked example, lab, brain dump, quiz, flashcards.",
+  "focus_minutes": 15,
+  "glossary": [
+    {"term": "Principal (P)", "meaning": "The money you start with: the first deposit. Everything else is built on top of it.", "where": "Quest 1"},
+    {"term": "Interest", "meaning": "A fee the bank pays you for keeping money with them, written as a percent of your balance per year.", "where": "Quest 1"},
+    {"term": "Simple interest", "meaning": "Interest paid only on the original principal. Same dollar amount every year, so growth is a straight line.", "where": "Quest 1"},
+    {"term": "Compound interest", "meaning": "Interest paid on the principal plus all interest already earned. Growth speeds up, so the graph is a curve.", "where": "Quest 1"},
+    {"term": "Rate (r)", "meaning": "The yearly interest rate written as a decimal: 10% is 0.10, 5% is 0.05.", "where": "Quest 1"},
+    {"term": "n", "meaning": "How many times per year the interest is added to the balance: 1 = yearly, 4 = quarterly, 12 = monthly, 365 = daily.", "where": "Quest 1"},
+    {"term": "Time (t)", "meaning": "How long the money stays invested, in years.", "where": "Quest 1"},
+    {"term": "Amount (A)", "meaning": "The balance at the end: principal plus all interest.", "where": "Quest 1"},
+    {"term": "Exponent", "meaning": "The small raised number in x^k. It says multiply x by itself k times. 1.1^3 = 1.1 x 1.1 x 1.1.", "where": "Quest 1"},
+    {"term": "Effective rate", "meaning": "The true yearly growth after compounding. 10% compounded daily is really about 10.52% a year.", "where": "Quest 1"},
+    {"term": "Doubling time", "meaning": "How many years until money doubles at a given rate.", "where": "Quest 2"},
+    {"term": "Rule of 72", "meaning": "Quick mental estimate: years to double is about 72 divided by the rate as a whole percent.", "where": "Quest 2"},
+    {"term": "Inflation", "meaning": "The rate at which prices rise, so the same money buys less each year.", "where": "Quest 2"},
+    {"term": "Real return", "meaning": "Your interest rate minus inflation: how fast your buying power actually grows.", "where": "Quest 2"}
+  ],
+  "quests": [
+    {
+      "id": "q1",
+      "title": "Money that makes money",
+      "minutes": 12,
+      "outcomes": [
+        "Explain the difference between simple and compound interest in one sentence",
+        "Say what every symbol in A = P(1 + r/n)^(nt) means and what happens when it changes",
+        "Compute a balance by hand and check it against the sliders"
+      ],
+      "steps": [
+        {"type": "predict", "prompt": "You put $1,000 in an account paying 10% a year and leave it for 30 years. Do you end up with about $4,000, $9,000 or $17,000?", "answer": "About **$17,400**. Most people guess $4,000 because they think in straight lines. Interest that earns interest is not a straight line, and that gap is this whole quest."},
+        {"type": "idea", "title": "Simple interest: the boring baseline",
+         "lines": ["You deposit money. That first deposit is the **principal**.", "Every year the bank pays a percent of the **original** deposit only.", "10% of $1,000 is $100. Every year. Forever."],
+         "analogy": "A tap dripping at a constant speed into a bucket. Twice as long, twice as much water.",
+         "example": "$1,000 at 10% simple: year 1 = $1,100, year 2 = $1,200 ... year 30 = $4,000. A straight line.",
+         "keep": "Simple interest = same dollars every year."},
+        {"type": "idea", "title": "Compound interest: interest earns interest",
+         "lines": ["Each year's interest is **added to the balance**.", "Next year the percent is taken from the **bigger** balance.", "So the growth itself grows. The graph is a curve, not a line."],
+         "analogy": "A snowball rolling downhill. The bigger it gets, the more snow it picks up on every turn.",
+         "example": "Year 1: $1,000 becomes $1,100. Year 2: $1,100 x 1.10 = $1,210. Year 3: $1,210 x 1.10 = $1,331.",
+         "trap": "Compounding is not a higher rate. It is the **same rate** applied to a **growing balance**."},
+        {"type": "decode", "title": "Decode the compound interest formula",
+         "intro": "One line of symbols. Here is what each piece IS, in plain words, and what it does to the answer.",
+         "formula": "[[0|A]] = [[1|P]] (1 + [[2|r]] / [[3|n]])<sup>[[3|n]][[4|t]]</sup>",
+         "read": "A equals P times one-plus-r-over-n, raised to the power n times t.",
+         "parts": [
+           {"sym": "[[0|A]]", "name": "AMOUNT (the answer)", "plain": "How much money you have at the end: your starting money plus all the interest.", "effect": "It is what you solve for. Bigger P, r, n or t all push A up."},
+           {"sym": "[[1|P]]", "name": "PRINCIPAL (what you start with)", "plain": "The first deposit, in dollars.", "effect": "Double P and A exactly doubles. P scales everything but never changes how fast it grows."},
+           {"sym": "[[2|r]]", "name": "RATE (yearly interest)", "plain": "The yearly interest rate as a decimal. 10% is 0.10.", "effect": "Higher r bends the curve upward. 6% vs 8% looks tiny but explodes over decades."},
+           {"sym": "[[3|n]]", "name": "COMPOUNDS PER YEAR", "plain": "How many times a year interest is added: 1 = yearly, 12 = monthly, 365 = daily.", "effect": "More often helps, but only a little: 10% compounded daily is about 10.52% a year, not 20%."},
+           {"sym": "[[4|t]]", "name": "TIME (in years)", "plain": "How long the money stays invested.", "effect": "t sits in the exponent, so every extra year multiplies the balance again. Time is the strongest lever."}
+         ],
+         "note": "**r/n** cuts the yearly rate into n smaller slices. **n x t** counts how many slices happen in total. Each slice multiplies your balance by (1 + r/n).",
+         "trap": "Type r as **0.10**, not 10. If you use 10 you are claiming 1000% interest."},
+        {"type": "worked", "title": "Worked example: compute it by hand",
+         "problem": "You deposit **$2,000** at **6%** a year, compounded **monthly**, for **5 years**. What is A?",
+         "steps": [
+           {"label": "List the symbols", "work": "P = 2000,  r = 0.06,  n = 12,  t = 5"},
+           {"label": "Slice the rate", "work": "r / n = 0.06 / 12 = 0.005"},
+           {"label": "Count the slices", "work": "n x t = 12 x 5 = 60"},
+           {"label": "Growth per slice", "work": "1 + 0.005 = 1.005"},
+           {"label": "Repeat 60 times", "work": "1.005^60 = 1.34885"},
+           {"label": "Scale by P", "work": "2000 x 1.34885 = 2697.70"}
+         ],
+         "answer": "A is about **$2,697.70**. Interest earned: about $697.70."},
+        {"type": "lab", "title": "Lab: pull every lever yourself",
+         "intro": "Red = compound, blue = simple. Move one slider at a time and watch which output changes.",
+         "controls": [
+           {"id": "P", "label": "P: principal", "min": 100, "max": 10000, "step": 100, "value": 1000, "fmt": "$0"},
+           {"id": "r", "label": "r: yearly rate", "min": 0.01, "max": 0.15, "step": 0.005, "value": 0.10, "fmt": "%"},
+           {"id": "n", "label": "n: compounds per year", "min": 1, "max": 12, "step": 1, "value": 1, "fmt": "0"},
+           {"id": "t", "label": "t: years", "min": 1, "max": 40, "step": 1, "value": 30, "fmt": "0"}
+         ],
+         "outputs": [
+           {"label": "A: compound balance", "expr": "P*pow(1+r/n,n*t)", "fmt": "$0"},
+           {"label": "Simple-interest balance", "expr": "P*(1+r*t)", "fmt": "$0"},
+           {"label": "Extra from compounding", "expr": "P*pow(1+r/n,n*t)-P*(1+r*t)", "fmt": "$0"}
+         ],
+         "plot": {"x": [0, 40], "at": "t", "xlabel": "years", "ylabel": "balance ($)",
+                  "series": [{"expr": "P*pow(1+r/n,n*x)", "label": "compound"}, {"expr": "P*(1+r*x)", "label": "simple", "color": "#1f7fd1"}]},
+         "tries": ["Set t = 5, then 20, then 40. Where does the red curve pull away from the blue line?", "Drop r to 3%, then raise it to 12%. Which slider bends the curve most?", "Move n from 1 to 12. How big is the change in A, really?", "Double P. Does A exactly double?"],
+         "keep": "Time and rate bend the curve. Principal only scales it. n barely matters."},
+        {"type": "dump", "prompt": "Without looking: explain compound interest and what A, P, r, n and t mean.", "points": ["Interest is paid on principal + earlier interest (snowball)", "A = final amount, P = starting deposit", "r = yearly rate as a decimal (0.10 for 10%)", "n = compounds per year, t = years", "t is in the exponent, so time is the strongest lever", "More frequent compounding (n) helps only slightly"]}
+      ],
+      "quiz": [
+        {"q": "Which statement describes compound interest?", "answer": "Interest is calculated on the starting deposit plus all interest already earned", "wrong": ["Interest is calculated only on the starting deposit", "The bank raises the rate every year", "Interest is paid once, at the end"], "why": "Compound means the interest is added to the balance, so the next interest payment is bigger. Paying only on the starting deposit is simple interest.", "tag": "CONCEPT"},
+        {"q": "In A = P(1 + r/n)^(nt), what does n stand for?", "answer": "How many times per year interest is added to the balance", "wrong": ["The number of years", "The number of deposits you make", "The interest rate as a percent"], "why": "n counts compounding periods per year (12 = monthly). The number of years is t, and the rate is r.", "tag": "DECODER"},
+        {"q": "You write r = 5 for a 5% rate in the formula. What goes wrong?", "answer": "You are using 500% interest; it must be r = 0.05", "wrong": ["Nothing, the formula accepts whole percents", "You are using 0.5% interest", "You get the simple-interest answer"], "why": "The formula wants a decimal. 5% = 5/100 = 0.05. Plugging in 5 means 500%.", "tag": "TRAP"},
+        {"q": "$1,000 at 10% simple interest for 3 years. What is the balance?", "answer": "$1,300", "wrong": ["$1,331", "$1,030", "$1,100"], "why": "Simple interest adds $100 per year for 3 years: $1,300. $1,331 is the compound answer (1,000 x 1.1^3).", "tag": "WORKED"},
+        {"q": "You double P and change nothing else. What happens to A?", "answer": "A exactly doubles", "wrong": ["A more than doubles because of compounding", "A stays the same", "A grows by the interest rate"], "why": "P is a plain multiplier in front of the formula, so doubling P doubles A. Compounding changes the growth rate, not the scaling.", "tag": "DECODER"},
+        {"q": "10% compounded daily instead of yearly changes the yearly growth to about:", "answer": "10.5%", "wrong": ["20%", "15%", "10% (no change at all)"], "why": "(1 + 0.10/365)^365 is about 1.1052, so about 10.52%. It helps a little. It does not double the rate.", "tag": "LAB"},
+        {"q": "Why is time (t) the strongest lever in the formula?", "answer": "t is in the exponent, so every extra year multiplies the balance again", "wrong": ["t is multiplied by P", "t is the largest number in the formula", "Longer time raises the interest rate"], "why": "Exponents repeat multiplication. Each extra year multiplies the whole balance by the same growth factor, so the effect stacks.", "tag": "CONCEPT"}
+      ],
+      "cards": [
+        {"front": "Simple vs compound interest?", "back": "Simple: % of the original deposit only (line). Compound: % of deposit + earned interest (curve)."},
+        {"front": "A = P(1 + r/n)^(nt): what is A?", "back": "Amount: the final balance."},
+        {"front": "What is P?", "back": "Principal: the starting deposit. It only scales the answer."},
+        {"front": "How do you type r for 7%?", "back": "As a decimal: r = 0.07."},
+        {"front": "What are n and t?", "back": "n = compounds per year (12 = monthly). t = years."},
+        {"front": "Which symbol is the strongest lever and why?", "back": "t: it is in the exponent, so every extra year multiplies the balance again."}
+      ],
+      "recap": {"lines": ["Compound interest = interest on interest: a curve, not a line.", "A = P(1 + r/n)^(nt): P scales, r and t bend, n helps a little.", "Always use r as a decimal."], "teach": "Explain to a friend why $1,000 at 10% becomes ~$17,400 in 30 years and not $4,000."}
+    },
+    {
+      "id": "q2",
+      "title": "Rule of 72, inflation and starting early",
+      "minutes": 10,
+      "outcomes": [
+        "Estimate doubling time in your head with the Rule of 72",
+        "Explain why inflation is compounding working against you",
+        "Show with numbers why starting early beats starting big"
+      ],
+      "steps": [
+        {"type": "predict", "prompt": "Roughly how many years does it take money to double at 8% a year? 5, 9 or 15?", "answer": "About **9 years**. There is a shortcut that gets you there in your head. That is the next screen."},
+        {"type": "decode", "title": "Decode the Rule of 72",
+         "formula": "[[0|years]] &asymp; [[1|72]] / [[2|r]]",
+         "read": "Years to double is about 72 divided by the rate.",
+         "parts": [
+           {"sym": "[[0|years]]", "name": "DOUBLING TIME", "plain": "How many years until your money is twice what it was.", "effect": "Higher rate means fewer years to double."},
+           {"sym": "[[1|72]]", "name": "THE MAGIC NUMBER", "plain": "About 69.3 (that is 100 x ln 2) rounded up to 72 because 72 divides evenly by 2, 3, 4, 6, 8, 9 and 12.", "effect": "It is fixed. It never changes."},
+           {"sym": "[[2|r]]", "name": "RATE AS A WHOLE PERCENT", "plain": "Use 8 for 8%, not 0.08.", "effect": "Double the rate and you halve the years."}
+         ],
+         "trap": "Here r is a **whole number** (8). In the compound formula r was a **decimal** (0.08). Different tools, different units."},
+        {"type": "worked", "title": "Worked example: double and quadruple",
+         "problem": "Money grows at **6%** a year. How long to double? How long to become 4 times as big?",
+         "steps": [
+           {"label": "Rule of 72", "work": "72 / 6 = 12 years to double"},
+           {"label": "4x = two doublings", "work": "double once, then double again: 12 + 12 = 24 years"},
+           {"label": "Sanity check", "work": "1.06^12 = 2.01 (about double). 1.06^24 = 4.05 (about 4x)"}
+         ],
+         "answer": "Doubles in about **12 years**, quadruples in about **24 years**."},
+        {"type": "lab", "title": "Lab: how good is the Rule of 72?",
+         "controls": [{"id": "r", "label": "rate (whole percent)", "min": 1, "max": 20, "step": 1, "value": 8, "fmt": "0", "unit": "%"}],
+         "outputs": [{"label": "Rule of 72 says", "expr": "72/r", "fmt": "1", "unit": "years"}, {"label": "Exact answer", "expr": "log(2)/log(1+r/100)", "fmt": "1", "unit": "years"}],
+         "svg": "<svg viewBox='0 0 640 110' width='100%'><text x='6' y='24' font-size='17' font-family='monospace' fill='#12213f'>Rule of 72</text><rect x='130' y='6' width='{{min(72/r*20,500)}}' height='24' fill='#e63946' stroke='#12213f' stroke-width='3'/><text x='6' y='64' font-size='17' font-family='monospace' fill='#12213f'>Exact</text><rect x='130' y='46' width='{{min(log(2)/log(1+r/100)*20,500)}}' height='24' fill='#1f7fd1' stroke='#12213f' stroke-width='3'/><text x='130' y='98' font-size='14' font-family='monospace' fill='#40527a'>bar length = years to double (20 px per year, capped)</text></svg>",
+         "plot": {"x": [0, 40], "xlabel": "years", "ylabel": "money (x starting amount)", "series": [{"expr": "pow(1+r/100,x)", "label": "growth"}]},
+         "tries": ["Try 2%, 8% and 18%. Where are the estimate and the exact answer closest?", "Find the year where the curve crosses 2. Does it match the number above?"],
+         "keep": "Rule of 72 is a quick estimate. It is closest at middling rates."},
+        {"type": "idea", "title": "Inflation: the same math, working against you",
+         "lines": ["Prices compound too. At 3% inflation prices double in about **24 years** (72 / 3).", "Money sitting in a drawer buys less every year.", "What counts is your **real return**: your interest rate minus inflation."],
+         "analogy": "A leaking bucket. Each day's leak looks tiny, but the level keeps dropping.",
+         "keep": "Real return is about interest rate minus inflation rate.",
+         "trap": "Savings paying 3% when inflation is 4% means your buying power is **shrinking** by about 1% a year."},
+        {"type": "idea", "title": "Start early beats start big",
+         "lines": ["Ana puts **$5,000** in at age 25. Ben puts **$5,000** in at age 35.", "Both earn 7% a year until age 65 and add nothing else.", "Ana's money compounds for 40 years, Ben's for 30."],
+         "example": "Ana: 5,000 x 1.07^40 = **about $74,900**. Ben: 5,000 x 1.07^30 = **about $38,100**. Same deposit, almost double the result, because of 10 extra years.",
+         "keep": "Time is in the exponent. Money is only the multiplier."},
+        {"type": "dump", "prompt": "Without looking: Rule of 72, inflation, and why starting early wins.", "points": ["Years to double is about 72 / rate (whole percent)", "Double the rate halves the doubling time", "Inflation is compounding against you; real return is rate minus inflation", "Starting early wins because t is in the exponent"]}
+      ],
+      "quiz": [
+        {"q": "Rule of 72: about how many years to double money at 9%?", "answer": "8 years", "wrong": ["6 years", "12 years", "9 years"], "why": "72 / 9 = 8. The most common slip is to answer 9 because the rate is 9.", "tag": "WORKED"},
+        {"q": "In years = 72 / r, how do you enter an 8% rate?", "answer": "r = 8 (whole percent)", "wrong": ["r = 0.08", "r = 80", "r = 1.08"], "why": "The Rule of 72 uses whole percents. The compound-interest formula uses decimals. Mixing them up is the classic mistake.", "tag": "TRAP"},
+        {"q": "Money doubles in 12 years. How long until it is 4 times the original?", "answer": "24 years (two doublings)", "wrong": ["48 years", "36 years", "16 years"], "why": "4x is two doublings: 2 x 2. Two doublings take 12 + 12 = 24 years.", "tag": "WORKED"},
+        {"q": "Inflation is 4% and your savings pay 3%. Your buying power:", "answer": "Slowly shrinks (real return about -1%)", "wrong": ["Grows by about 3%", "Stays flat", "Grows by about 7%"], "why": "Real return is roughly rate minus inflation: 3% - 4% = -1%. You have more dollars but they buy less.", "tag": "CONCEPT"},
+        {"q": "Ana invests $5,000 at 25 and Ben $5,000 at 35, both at 7% to age 65. Ana ends with about:", "answer": "Twice Ben's amount", "wrong": ["The same as Ben", "10% more than Ben", "Four times Ben's amount"], "why": "1.07^40 = 14.97 and 1.07^30 = 7.61, a ratio of about 1.97. Ten extra years in the exponent nearly doubles the result.", "tag": "LAB"},
+        {"q": "Why is the Rule of 72 using 72 and not 69?", "answer": "72 is close to 69.3 and divides evenly by many common rates", "wrong": ["72 is the number of months in 6 years", "72 is the legal compounding limit", "72 is the average stock market return"], "why": "The exact number is about 69.3 (100 x ln 2). 72 is easier because it divides by 2, 3, 4, 6, 8, 9 and 12, and it is more accurate near 8%.", "tag": "CONCEPT"}
+      ],
+      "cards": [
+        {"front": "Rule of 72?", "back": "Years to double is about 72 / rate (as a whole percent)."},
+        {"front": "Double the rate: what happens to doubling time?", "back": "It halves."},
+        {"front": "How do you enter 8% in the Rule of 72 vs in the compound formula?", "back": "Rule of 72: 8. Compound formula: 0.08."},
+        {"front": "What is real return?", "back": "Interest rate minus inflation rate: how fast buying power grows."},
+        {"front": "Why does starting early beat starting big?", "back": "Time is in the exponent, so each extra year multiplies the balance again."}
+      ],
+      "recap": {"lines": ["72 / rate (whole percent) is about the years to double.", "Inflation is compounding against you; look at real return.", "Time in the exponent beats extra dollars."], "teach": "Tell a friend how long their money takes to double at 6% and why waiting 10 years to start costs so much."}
+    }
+  ]
+}
