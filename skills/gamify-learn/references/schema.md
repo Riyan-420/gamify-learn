@@ -102,6 +102,10 @@ Live sliders. Evaluate JavaScript expressions over control ids; `Math` functions
 - `svg`: your own drawing. Every `{{expression}}` is re-evaluated when a slider moves, so you can make shapes, arrows and bars respond to the controls. Use this for geometry, circuits, ray diagrams, anything a line chart cannot show.
 - At least one of `outputs`, `plot`, `svg` is required. Outputs must be finite numbers at the default values (`smoke_test.py` checks).
 
+### Staged illustrations (any `viz`, `svg` or `html`)
+
+Inside inline SVG, give elements `data-s="1"`, `data-s="2"` ... Everything without `data-s` is shown at once; each press of SPACE / the red button reveals the next stage (elements sharing a number appear together; unnumbered pieces are always visible). Put a numbered caption in the same stage so the explanation grows with the picture. `scripts/svgkit.py` does this for you (`Fig.add(stage, ...)`, `Fig.cap(stage, text)`). Outside the game (PDF, print, `?reveal`) all stages are visible.
+
 ### figure
 A picture from the source with a purpose.
 `{"type":"figure","title":"...","src":"fig/a.png","caption":"Look at the red arrow: ...","credit":"Lecture 2, slide 14","lines":["optional bullets"],"keep":"..."}` or `"svg":"<svg>...</svg>"` instead of `src`.

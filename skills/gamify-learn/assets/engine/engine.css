@@ -291,3 +291,43 @@ body.calm .cloud{display:none}
 
 .qgrid{margin-bottom:34px}
 body.static *,body.static *::before,body.static *::after{animation:none!important;transition:none!important}
+
+/* ===== v1.2: real reveal (nothing shows before SPACE), staged illustrations, phone polish ===== */
+.rv:not(.on){display:none!important}
+svg [data-s]:not(.on){display:none}
+svg [data-s].on{animation:sfade .5s ease both}
+@keyframes sfade{from{opacity:0}to{opacity:1}}
+.vizbox svg{image-rendering:auto;shape-rendering:geometricPrecision}
+html{-webkit-text-size-adjust:100%;text-size-adjust:100%}
+button,.opt,.qc,.hbtn,.fcard{touch-action:manipulation;-webkit-tap-highlight-color:transparent}
+input,textarea,select{font-size:16px}
+body{padding-bottom:calc(170px + env(safe-area-inset-bottom,0px))}
+.hud{padding-top:max(10px,env(safe-area-inset-top,0px));padding-left:max(16px,env(safe-area-inset-left,0px));padding-right:max(16px,env(safe-area-inset-right,0px))}
+.floor{height:calc(44px + env(safe-area-inset-bottom,0px))}
+.nav{bottom:calc(44px + env(safe-area-inset-bottom,0px))}
+.panel table{display:block;max-width:100%;overflow-x:auto}
+.crow>span,.sy>div,.steps .sw{min-width:0;overflow-wrap:anywhere}
+.node{max-width:100%}
+@media(max-width:600px){
+  #app{padding:14px 10px 6px}
+  .panel{padding:14px 12px}
+  .btn{min-height:46px}
+  .opt{min-height:52px}
+  .hud{gap:8px;padding-left:max(10px,env(safe-area-inset-left,0px));padding-right:max(10px,env(safe-area-inset-right,0px))}
+  input[type=range]{height:34px}
+  input[type=range]::-webkit-slider-thumb{width:30px;height:40px}
+  input[type=range]::-moz-range-thumb{width:26px;height:36px}
+  .fstep{flex-wrap:wrap}
+  .node{min-width:0;width:100%}
+  .nav{gap:10px;padding-left:10px;padding-right:10px}
+  .nav .btn{flex:1;max-width:60vw}
+  .toasts{left:10px;right:10px;max-width:none}
+}
+@media(max-width:380px){
+  body{font-size:22px}
+  .panel{padding:12px 10px}
+  h2{font-size:13px}
+}
+/* long unbroken strings (number lists, code, urls) must wrap instead of widening the page on phones */
+.panel{overflow-wrap:anywhere;word-break:break-word}
+.panel code,.panel .mono{word-break:break-all}

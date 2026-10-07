@@ -21,6 +21,29 @@ The failure this skill exists to prevent: slides that show `P_C = R(P_W - C)` or
 
 Short quests are fine (6 to 8 screens). If a quest passes about 14 screens, split it.
 
+## Illustrations: picture it from zero to understood
+
+Words alone leave the learner guessing what the machine looks like. For every concept that has a shape, a flow, a structure or a number-in-motion, add an illustration (`viz` on an `idea` / `decode` / `worked` step, or `svg` on a lab).
+
+Rules:
+- **Show the mechanism, not a logo.** A cache diagram shows the CPU, the cache, the memory, the request going out, the copy coming back. A tree sum shows every core and every stage with the actual numbers.
+- **Build it in stages.** Stage 0 = the empty scene; each next stage adds one thing (an arrow, a value, a highlight) with a **numbered caption**. A first-time learner follows it like an animation, one press at a time. Use 2 to 5 stages.
+- **Same numbers as the text.** If the worked example says 95, the picture says 95. Compute numbers with code and put them in the SVG with code.
+- **Style:** clean vector, soft shadows, the palette (navy, red, blue, cream, light blue), sans-serif labels at 10 to 13 px in a 360-wide viewBox so it reads on a phone. Not pixel art. No text smaller than 9 px. Never let labels overlap shapes.
+- **Make the wrong thing visible too:** the stale copy in red, the idle lane hatched, the bottleneck in red.
+- **Look at it.** Render every illustration (screenshot) and fix overlaps before shipping; check it at phone width.
+
+`scripts/svgkit.py`:
+
+```python
+from svgkit import *
+f = Fig(360, 180, "title")
+f.add(0, box(20, 40, 100, 40, "CPU"), box(240, 40, 100, 40, "MEMORY"))     # always visible
+f.add(1, arrow(122, 60, 238, 60, RED), text(180, 52, "load x", 11, RED2))  # first press
+f.cap(1, "The CPU asks memory for x.")                                      # numbered caption for stage 1
+step["viz"] = f.render()
+```
+
 ## Decoder cards: what to write
 
 For each symbol, three things:

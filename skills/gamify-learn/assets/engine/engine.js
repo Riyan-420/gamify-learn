@@ -195,7 +195,7 @@ function menu(){
 }
 function about(){
   overlay('<div class="panel"><h2>How this works</h2>'+
-  '<ul class="lines"><li><b>One direction.</b> Quests unlock in order. Each idea is taught once, in the place where you are ready for it, and later quests reuse it.</li><li><b>Relearning on purpose.</b> Every quest opens with a warm-up from earlier quests, and your skill line shows each concept filling up as you get it right again and again.</li><li><b>Short quests.</b> One idea per screen, about '+(QUESTS[0]?QUESTS[0].minutes:12)+' minutes per quest. Press SPACE to reveal the next piece.</li>'+
+  '<ul class="lines"><li><b>One direction.</b> Quests unlock in order. Each idea is taught once, in the place where you are ready for it, and later quests reuse it.</li><li><b>Relearning on purpose.</b> Every quest opens with a warm-up from earlier quests, and your skill line shows each concept filling up as you get it right again and again.</li><li><b>Short quests.</b> One idea per screen, about '+(QUESTS[0]?QUESTS[0].minutes:12)+' minutes per quest. Press SPACE, tap the red button, or swipe left to reveal the next piece. On a phone, swipe right to go back.</li>'+
   '<li><b>Predict, learn, test.</b> Guess first, read, then quiz yourself. Testing yourself is one of the best-supported study methods.</li>'+
   '<li><b>Wrong answers are data.</b> Misses go to a retry list and come back in boss raids.</li>'+
   '<li><b>Spaced review.</b> Flashcards return after 1, 2, 4, 7 and 14 days if you rate them honestly.</li>'+
@@ -271,7 +271,7 @@ function rQuest(){
   if(!R){root.innerHTML='<div class="panel">Unknown step type: '+esc(s.t)+'</div>';return}
   root.innerHTML='<div class="panel">'+head+'<div id="body"></div></div>';
   const body=$(root,'#body');R(body,q,s);
-  reveals=$$(body,'.rv');shown=0;navDraw(q);
+  reveals=collect(body);shown=0;navDraw(q);
   if(/[?&]reveal/.test(location.search)){revealAll();navDraw(q);if(s.t==='question'&&body._pick)body._pick(body._correct)}  /* ?reveal: show everything (screenshots, printing) */
 }
 function navDraw(q){
@@ -285,12 +285,15 @@ function navDraw(q){
 navEl.addEventListener('click',e=>{const b=e.target.closest('[data-n]');if(!b)return;b.dataset.n==='next'?next():prev()});
 function next(){
   if(V.v!=='quest'||gated)return;
-  if(shown<reveals.length){reveals[shown++].classList.add('on');navDraw();SND.click();const r=reveals[shown-1];r.scrollIntoView({block:'nearest',behavior:S.calm?'auto':'smooth'});return}
+  if(shown<reveals.length){turnOn(reveals[shown++]);navDraw();SND.click();const r=reveals[shown-1];const tg=r.ownerSVGElement||r;try{tg.scrollIntoView({block:'nearest',behavior:S.calm?'auto':'smooth'})}catch(e){}return}
   const q=QUESTS[V.q];if(V.i<q.steps.length-1)go({v:'quest',q:V.q,i:V.i+1});else go({v:'map'});
 }
 function prev(){if(V.v!=='quest')return;const q=QUESTS[V.q];if(V.i>0)go({v:'quest',q:V.q,i:V.i-1})}
 function gate(on){gated=on;if(V.v==='quest')navDraw()}
-function revealAll(){reveals.forEach(r=>r.classList.add('on'));shown=reveals.length}
+function turnOn(el){el.classList.add('on');(el._with||[]).forEach(x=>x.classList.add('on'))}
+function revealAll(){reveals.forEach(turnOn);shown=reveals.length}
+/* every .rv block is one reveal; inside an illustration, elements marked data-s="1","2",... build up one stage per press */
+function collect(root){const out=[];$$(root,'.rv').forEach(r=>{out.push(r);const L=$$(r,'svg [data-s]');if(!L.length)return;const by={};L.forEach(l=>{(by[l.getAttribute('data-s')]=by[l.getAttribute('data-s')]||[]).push(l)});Object.keys(by).map(Number).sort((a,b)=>a-b).forEach(k=>{const g=by[k];g[0]._with=g.slice(1);out.push(g[0])})});return out}
 
 const li=(arr,cls)=>'<ul class="lines">'+(arr||[]).map(l=>'<li class="rv">'+fmt(l)+'</li>').join('')+'</ul>';
 const co=(cls,label,txt)=>txt?'<div class="co '+cls+' rv"><small>'+label+'</small>'+fmt(txt)+'</div>':'';
@@ -355,7 +358,7 @@ function sPredict(b,q,s){
   $(b,'[data-k=lock]').onclick=e=>{e.target.style.display='none';$(b,'#pa').style.display='block';if(!S.hooks[id]){S.hooks[id]=1;addXP(3,'predicted first')}save()};
 }
 function sIdea(b,q,s){
-  b.innerHTML='<h2>'+fmt(s.title)+'</h2>'+li(s.lines)+co('ana','THINK OF IT AS',s.analogy)+vizHtml(s.viz)+figHtml(s)+co('eg','EXAMPLE',s.example)+co('keep','KEEP THIS',s.keep)+co('trap','TRAP',s.trap);
+  b.innerHTML='<h2>'+fmt(s.title)+'</h2>'+li(s.lines)+vizHtml(s.viz)+figHtml(s)+co('ana','THINK OF IT AS',s.analogy)+co('eg','EXAMPLE',s.example)+co('keep','KEEP THIS',s.keep)+co('trap','TRAP',s.trap);
 }
 function sHtml(b,q,s){b.innerHTML=(s.title?'<h2>'+fmt(s.title)+'</h2>':'')+'<div class="rv">'+s.html+'</div>'}
 function sFigure(b,q,s){b.innerHTML='<h2>'+fmt(s.title||'')+'</h2>'+li(s.lines)+(s.svg?'<div class="vizbox rv">'+s.svg+'</div>':'')+figHtml(s)+co('keep','KEEP THIS',s.keep)}

@@ -28,7 +28,7 @@ Built for people who find long slides hard to focus on (ADHD-friendly by design,
 
 ![Decoder](docs/img/decode.png)
 
-**5. See it, then move it.** Flow diagrams, side-by-side comparisons, and live labs where you pull each slider and watch the formula act.
+**5. See it, then move it.** Real illustrations (clean vector diagrams in the game's colours, drawn with the bundled `svgkit.py`) that **build up one step per press**, each step with a numbered note under it; flow diagrams, side-by-side comparisons, and live labs where you pull each slider and watch the formula act.
 
 | | |
 |---|---|
@@ -94,6 +94,10 @@ The assistant will ask a couple of questions, extract the text, show you the **o
 
 [`skills/gamify-learn/examples/compound-interest/compound-interest.html`](skills/gamify-learn/examples/compound-interest/compound-interest.html) is a complete four-quest game (see it, decode it, estimate it, solve it) using every feature: concept ledger, warm-ups, decoder, flow, compare, worked example, labs, hint-ladder solves, 20 quiz questions and 19 flashcards. Download the file and open it in any browser. Its source, [`course.json`](skills/gamify-learn/examples/compound-interest/course.json), is the best template for writing your own.
 
+## Use it on a phone
+
+The game is responsive: one column, thumb-sized buttons, swipe left for next and right for back, notch-safe. Step-by-step instructions for **iPhone** and **Android** (web address with Add to Home Screen, a file viewer app, or the PDF edition) are in **[docs/PHONE.md](docs/PHONE.md)**. Layout was checked in a phone emulator at 390, 360 and 320 px wide; `scripts/mobile_test.py` repeats that check for your own course.
+
 ## Use it by hand (no assistant)
 
 Needs Python 3 (developed and tested on 3.11). `build.py` and `validate.py` use only the standard library.
@@ -122,14 +126,22 @@ Step types: `predict` · `idea` · `decode` · `flow` · `compare` · `worked` �
 ```
 skills/gamify-learn/
   SKILL.md                  instructions the assistant reads (learning line + research rules)
-  scripts/                  extract_text, validate, build, smoke_test
+  scripts/                  extract_text, validate, build, smoke_test, mobile_test, svgkit
   assets/engine/            engine.js, engine.css, template.html
   assets/fonts/             Press Start 2P + VT323 (SIL OFL 1.1)
   references/               learning-line, authoring-guide, schema, evidence
   examples/compound-interest/
 .claude-plugin/             plugin + marketplace manifests
+docs/PHONE.md               how to use a game on iPhone and Android
 tools/package.py            builds dist/gamify-learn.skill
 ```
+
+## What is new in v1.2
+
+- **Real reveal.** Nothing on a screen is visible before you press SPACE or the red button. (v1.1 had a CSS bug: decoder cards, compare rows, worked steps and flow boxes were already on screen and SPACE only played an animation.)
+- **Staged illustrations.** Any `viz` / `svg` can contain elements marked `data-s="1"`, `data-s="2"` ...; each press shows the next stage. `scripts/svgkit.py` makes them (cards, arrows, chips, axes, a `Fig` class with numbered captions).
+- **Phone layout** and iOS Home Screen meta tags; long unbroken strings wrap instead of widening the page.
+- `scripts/mobile_test.py`: automatic phone-width check.
 
 ## Limits worth knowing
 

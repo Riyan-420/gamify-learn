@@ -15,7 +15,7 @@ You write a `course.json`; the bundled engine turns it into a retro (light-blue 
 2. **A story spine.** Every quest has a `question` (a curiosity gap the quest closes), a `previously` (how it grows out of the last quest) and a `next_hook` (the cliffhanger into the next one). Reuse one running example across quests when you can. The learner should always know: where am I, how did I get here, what comes next.
 3. **Relearn on purpose.** A concept taught once is forgotten. Every concept needs **3 or more touchpoints after it is taught, at least one in a later quest**: quiz questions and flashcards tagged with `concepts`, worked/lab/solve steps that list it in `needs`. The engine adds an automatic **warm-up** to every quest (3 questions from earlier quests, weighted toward what this quest needs and what was missed), a **skill line** where each concept's pips fill as it is answered correctly across quests, spaced flashcards (1, 2, 4, 7, 14 days) and mixed-topic boss raids.
 4. **Teach, check, apply, solve.** After each new idea, a quick quiz question (retrieval, not re-reading). Then a worked example, then fading support: a `solve` step with a hint ladder, then solve steps with fewer hints. The **last quest is a capstone of `solve` steps** that mix everything learned. Done means: can solve it without the steps.
-5. **See it.** Every quest has something visual: `lab` (sliders, live plot or SVG), `flow` (a process as boxes and arrows), `compare` (side-by-side table), `figure`, or an SVG `viz`. Real figures from the source are welcome (for the learner's own use).
+5. **See it, properly.** Every idea that can be pictured gets an **illustration**, not decoration: a clean vector diagram (white cards, the navy/red/blue palette, readable sans-serif text, NOT pixel art) that shows the real mechanism and **builds up one stage per press** with a numbered note under each stage, so the learner can rebuild it in their head. Use `scripts/svgkit.py` (`Fig`, `box`, `arrow`, `axes` ...). Also `lab` (sliders, live plot or live `svg`), `flow`, `compare`, `figure`. Real figures from the source are welcome (for the learner's own use). See "Illustrations" in `references/authoring-guide.md`.
 6. **Keep interest high.** Open each quest with a `predict`. Never more than 3 passive screens in a row (validator warns): alternate learn / do. Short quests (8 to 14 screens, about 12 minutes), quick wins first, curiosity questions, visible progress. No decoration that competes with the content; novelty belongs in the structure, not in random flash.
 
 ## Research behind these rules
@@ -49,7 +49,8 @@ Full notes, limits and sources in `references/evidence.md`. Summary the assistan
    ```
    Fix every ERROR. In `--strict` mode every warning must be fixed or consciously accepted (and told to the user). `?reveal` on the URL shows every screen fully (screenshots, printing).
 6. **Look at it.** Open or screenshot at least: the map, a mission screen, a decoder, a lab, a warm-up, a solve step. Say honestly what you checked.
-7. **Hand over.** File path; how to start (double-click, any browser; progress saves in that browser, Menu then Export); the quest list as a story; which source topics are covered or left out; the honest limits.
+7. **Phone.** If the learner will use a phone, run `python scripts/mobile_test.py <Name>.html --w 390` and point them to `docs/PHONE.md` (iPhone and Android steps). Offer a phone-sized PDF if they want to read without sliders.
+8. **Hand over.** File path; how to start (double-click, any browser; progress saves in that browser, Menu then Export); the quest list as a story; which source topics are covered or left out; the honest limits.
 
 ## Teaching rules inside every quest
 
@@ -70,6 +71,8 @@ Full notes, limits and sources in `references/evidence.md`. Summary the assistan
 | `scripts/validate.py` | schema errors, the one-direction concept ledger, teaching-quality warnings (`--strict`) |
 | `scripts/build.py` | course.json to one self-contained HTML |
 | `scripts/smoke_test.py` | headless Chrome renders every screen and checks the lab maths |
+| `scripts/mobile_test.py` | optional: phone-emulated check of every screen for sideways overflow |
+| `scripts/svgkit.py` | helpers for clean, staged explanatory illustrations |
 | `assets/engine/`, `assets/fonts/` | the game (CSS, JS, template) and OFL pixel fonts |
 | `references/learning-line.md` | how to sequence, link and relearn |
 | `references/authoring-guide.md` | how to write a course that teaches |
