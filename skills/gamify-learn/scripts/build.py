@@ -1,12 +1,17 @@
 #!/usr/bin/env python3
 """Build a single self-contained HTML game from a course.json.
 
-usage: python build.py course.json [-o out.html] [--no-validate]
+usage: python build.py course.json [-o out.html] [--theme retro|pastel] [--no-validate]
 
 Images referenced by relative path (figure steps: "src", or <img src="..."> inside html/viz strings)
 are inlined as base64 so the output is one file that works offline.
+
+Themes (see themes.py): `--theme pastel` or `"theme": "pastel"` in course.json. Default is retro.
 """
 import argparse, base64, json, mimetypes, os, re, sys
+
+sys.path.insert(0, os.path.dirname(os.path.abspath(__file__)))
+import themes
 
 HERE = os.path.dirname(os.path.abspath(__file__))
 ASSETS = os.path.join(os.path.dirname(HERE), "assets")
@@ -69,6 +74,7 @@ def main():
     ap = argparse.ArgumentParser()
     ap.add_argument("course")
     ap.add_argument("-o", "--out")
+    ap.add_argument("--theme", choices=sorted(themes.THEMES), help="look of the game (default: course.json \"theme\", else retro)")
     ap.add_argument("--no-validate", action="store_true")
     ap.add_argument("--strict", action="store_true", help="treat validation warnings as errors")
     a = ap.parse_args()
@@ -89,23 +95,45 @@ def main():
             print(f"{len(errs)} error(s), {len(warns) if a.strict else 0} warning(s) counted as errors. Fix them or pass --no-validate.")
             sys.exit(1)
 
+    theme = a.theme or course.get("theme", "retro")
+    if theme not in themes.THEMES:
+        print(f"unknown theme {theme!r}; choose one of: {', '.join(sorted(themes.THEMES))}")
+        sys.exit(1)
     inline_images(course, os.path.dirname(course_path))
+    course = themes.retheme(course, theme)
     out = a.out or os.path.splitext(course_path)[0] + ".html"
 
     cj = json.dumps(course, ensure_ascii=False).replace("</", "<\\/").replace("\u2028", "\\u2028").replace("\u2029", "\\u2029")
+    if theme == "retro":
+        fonts = ("@font-face{font-family:'Press Start 2P';src:url(data:font/woff2;base64," + b64("fonts", "PressStart2P-latin.woff2") + ") format('woff2');font-display:swap}\n"
+                 "@font-face{font-family:'VT323';src:url(data:font/woff2;base64," + b64("fonts", "VT323-latin.woff2") + ") format('woff2');font-display:swap}")
+        theme_css = theme_js = ""
+        bg = '<div class="cloud c1"></div><div class="cloud c2"></div><div class="cloud c3"></div>'
+        floor = '<div class="floor"></div>'
+    else:
+        fonts = ""
+        theme_css = read("themes", theme, "theme.css")
+        theme_js = "<script>\n" + read("themes", theme, "theme.js") + "\n</script>"
+        bg = '<div class="aura a1"></div><div class="aura a2"></div><div class="aura a3"></div>'
+        floor = ""
     page = (read("engine", "template.html")
             .replace("{{LANG}}", course.get("lang", "en"))
+            .replace("{{THEME_COLOR}}", themes.THEMES[theme]["color"])
+            .replace("{{THEME}}", theme)
             .replace("{{TITLE}}", re.sub(r"<[^>]+>", "", course["title"]).replace("&", "&amp;"))
-            .replace("{{FONT_PX}}", b64("fonts", "PressStart2P-latin.woff2"))
-            .replace("{{FONT_VT}}", b64("fonts", "VT323-latin.woff2"))
+            .replace("{{FONTS}}", fonts)
             .replace("{{CSS}}", read("engine", "engine.css"))
+            .replace("{{THEME_CSS}}", theme_css)
+            .replace("{{THEME_JS}}", theme_js)
+            .replace("{{BG}}", bg)
+            .replace("{{FLOOR}}", floor)
             .replace("{{COURSE_JSON}}", cj)
             .replace("{{JS}}", read("engine", "engine.js")))
     with open(out, "w", encoding="utf-8") as f:
         f.write(page)
     nq = sum(len(q.get("quiz", [])) for q in course["quests"])
     nc = sum(len(q.get("cards", [])) for q in course["quests"])
-    print(f"built {out}  ({len(page) // 1024} KB, {len(course['quests'])} quests, {nq} quiz questions, {nc} cards)")
+    print(f"built {out}  ({len(page) // 1024} KB, theme {theme}, {len(course['quests'])} quests, {nq} quiz questions, {nc} cards)")
 
 
 if __name__ == "__main__":

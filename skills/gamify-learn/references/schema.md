@@ -21,6 +21,7 @@ Relative image paths (`"src": "fig/a.png"`) are inlined as base64 by `build.py`,
   "subtitle": "One line shown on the title screen and map",
   "about": "Optional note shown in How it works",
   "lang": "en",
+  "theme": "retro",
   "focus_minutes": 15,
   "linear": true,
   "concepts": [{"id": "principal", "name": "Principal (P)"}],
@@ -29,6 +30,7 @@ Relative image paths (`"src": "fig/a.png"`) are inlined as base64 by `build.py`,
 }
 ```
 
+`theme` is the look: `retro` (default: pixel fonts, sky, red) or `pastel` (minimal, modern, smooth). `build.py --theme pastel` overrides it. Same course, same engine; illustrations written in the default palette are re-coloured automatically. See `scripts/themes.py`.
 `slug` namespaces the saved progress in the browser. Give every course its own slug.
 `linear` (default true) locks each quest until the previous one is finished; the learner can switch the lock off in Menu.
 `concepts` gives display names to concept ids (ids used in `teaches`, `needs`, `concepts`). Any id used in `teaches` is added automatically with a prettified name if you leave it out. See `learning-line.md`.

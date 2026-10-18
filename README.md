@@ -1,12 +1,28 @@
 # gamify-learn
 
-**Turn any course material into a retro study game that teaches in one straight line, from zero to solving problems.**
+**Turn any course material into a study game that teaches in one straight line, from zero to solving problems.** Two looks: retro 8-bit or pastel minimal.
 
 Give an AI assistant your lecture slides, PDFs, notes or a textbook chapter. It maps the topic into a prerequisite line, writes a short `course.json`, and this skill's engine turns it into **one offline HTML file**: a light-blue-sky, red-brick, 8-bit game with ordered quests, XP, levels, streaks, badges, boss raids, quizzes, spaced flashcards, and "your turn" problems at the end.
 
 Built for people who find long slides hard to focus on (ADHD-friendly by design, grounded in research with honest limits) and for everyone who has stared at a formula like `P_C = R(P_W − C)` and thought: *but what IS P_C?*
 
 ![Title screen](docs/img/title.png)
+
+## Themes
+
+Same engine, same `course.json`, two looks. Pick one with `python scripts/build.py course.json --theme pastel` or `"theme": "pastel"` in the JSON.
+
+| `retro` (default) | `pastel` |
+|---|---|
+| 8-bit pixel fonts, light-blue sky, red bricks, chunky borders | Minimal, modern, smooth: soft lilac / peach / mint, glass panels, rounded vector icons, system rounded font |
+
+![Pastel title](docs/img/pastel-title.png)
+![Pastel map](docs/img/pastel-map.png)
+| | |
+|---|---|
+| ![Pastel decoder](docs/img/pastel-decode.png) | ![Pastel lab](docs/img/pastel-lab.png) |
+
+Illustrations you draw with `svgkit.py` are re-coloured for the chosen theme at build time, so an existing course can be re-themed without editing it. A theme is a folder in `skills/gamify-learn/assets/themes/<name>/` (`theme.css`, `theme.js`) plus an entry in `scripts/themes.py`.
 
 ## What makes it different
 

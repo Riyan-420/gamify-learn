@@ -24,6 +24,8 @@ def check(c, base="."):
         return ["course.json must be an object"], W
     if not c.get("title"):
         E.append("missing top-level 'title'")
+    if c.get("theme", "retro") not in ("retro", "pastel"):
+        E.append("'theme' must be 'retro' or 'pastel' (see scripts/themes.py)")
     qs = c.get("quests")
     if not isinstance(qs, list) or not qs:
         E.append("'quests' must be a non-empty list")

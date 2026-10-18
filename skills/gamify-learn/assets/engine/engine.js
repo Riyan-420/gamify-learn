@@ -2,6 +2,8 @@
 (function(){
 'use strict';
 const D=window.__COURSE;
+const TH=window.__THEME||{};   /* optional theme pack (themes/<name>/theme.js): smooth icons + palette. Retro has none. */
+const PL=Object.assign({grid:'#c4e8ff',axis:'#40527a',ink:'#12213f',series:['#e63946','#1f7fd1','#12213f'],at:'#e63946',bw:3,mw:3,lw:4,font:'monospace',conf:['#e63946','#2a9df4','#ffd23f','#fff','#12213f']},TH.palette||{});
 const SLUG=(D.slug||D.title||'course').toString().toLowerCase().replace(/[^a-z0-9]+/g,'-').slice(0,40);
 const KEY='gamify_learn_'+SLUG+'_v1';
 let S={xp:0,streak:0,last:'',ans:{},cards:{},done:{},dumps:{},hooks:{},badges:{},calm:false,sfx:false,tmin:D.focus_minutes||15,combo:0,best:0,raids:0,seen:false,solves:{},unlockAll:false};
@@ -42,6 +44,7 @@ const BM={
  flag:['nrrrr','nrrrr','nrrr.','n....','n....','n....','n....']
 };
 function icon(name,px){
+  if(TH.icons&&TH.icons[name])return TH.icons[name](px||3);
   const rows=BM[name];if(!rows)return '';px=px||3;
   const w=Math.max(...rows.map(r=>r.length));let rects='';
   rows.forEach((r,y)=>{[...r].forEach((ch,x)=>{if(ch!=='.')rects+='<rect x="'+x+'" y="'+y+'" width="1" height="1" fill="'+PAL[ch]+'"/>'})});
@@ -115,7 +118,7 @@ function renderHud(){
 hud.addEventListener('click',e=>{const a=e.target.closest('[data-a]');if(!a)return;const k=a.dataset.a;
   if(k==='map')go({v:'map'});else if(k==='timer')tToggle();else if(k==='gloss')glToggle(true);else if(k==='menu')menu();});
 function toast(msg,cls){const t=document.createElement('div');t.className='toast '+(cls||'');t.textContent=msg;toasts.appendChild(t);setTimeout(()=>t.remove(),2600)}
-function confetti(n){if(S.calm)return;const cols=['#e63946','#2a9df4','#ffd23f','#fff','#12213f'];for(let i=0;i<(n||40);i++){const c=document.createElement('i');c.className='conf';c.style.left=Math.random()*100+'vw';c.style.background=cols[i%5];c.style.animationDelay=Math.random()*.4+'s';document.body.appendChild(c);setTimeout(()=>c.remove(),2200)}}
+function confetti(n){if(S.calm)return;const cols=PL.conf;for(let i=0;i<(n||40);i++){const c=document.createElement('i');c.className='conf';c.style.left=Math.random()*100+'vw';c.style.background=cols[i%cols.length];c.style.animationDelay=Math.random()*.4+'s';document.body.appendChild(c);setTimeout(()=>c.remove(),2200)}}
 function touch(){const t=today();if(S.last!==t){S.streak=(S.last&&dnum(t)-dnum(S.last)===1)?S.streak+1:1;S.last=t;if(S.streak>=3)award('streak3');if(S.streak>=7)award('streak7')}}
 function addXP(n,why){
   if(!n)return;touch();const before=lvl();S.xp+=n;save();renderHud();toast('+'+n+' XP  '+why);
@@ -250,7 +253,7 @@ function rMap(){
   const tree=CONLIST.length?'<div class="panel"><h2>Skill line</h2><p class="mut sm" style="margin-bottom:10px">Every concept, in the order you learn it. Pips fill when you answer questions about it correctly across different quests: that is the relearning.</p><div class="tree">'+CONLIST.map(c=>{const mp=mastery(c.id);return '<span class="cn m'+mp+'" title="Taught in quest '+(c.quest+1)+'"><b>'+esc(c.name)+'</b><span class="pips">'+[0,1,2].map(k=>'<i class="pp'+(k<mp?' on':'')+'"></i>').join('')+'</span></span>'}).join('')+'</div></div>':'';
   root.innerHTML='<div class="panel"><div class="chips"><span class="chip r">WORLD MAP</span></div><h1>'+esc(D.title)+'</h1><p class="mut" style="margin-top:8px">'+fmt(D.subtitle||'')+'</p>'+track(-1)+
    '<div class="stats"><span class="stat2">'+icon('bolt',2)+'LV <b>'+lvl()+'</b></span><span class="stat2">'+icon('coin',2)+'<b>'+S.xp+'</b> XP</span><span class="stat2">'+icon('flame',2)+'STREAK <b>'+S.streak+'</b></span><span class="stat2">ANSWERED <b>'+tot+'</b>  RIGHT LAST TIME <b>'+right+'</b></span>'+(sids.length?'<span class="stat2">SOLVED <b>'+sdone+'/'+sids.length+'</b></span>':'')+'</div>'+
-   '<div class="row"><button class="btn big" data-a="nb">'+esc(nb.t)+'</button><button class="btn ghost sm2" data-a="review">DAILY REVIEW ('+due+')</button><button class="btn ghost sm2" data-a="retry">RETRY MISSES ('+m+')</button>'+(redo.length?'<button class="btn ghost sm2" data-a="redo">REDO SOLVES ('+redo.length+')</button>':'')+'<button class="btn blue sm2" data-a="raid">BOSS RAID</button></div>'+
+   '<div class="row"><button class="btn big" data-a="nb">'+(nb.q?esc(nb.t.slice(0,nb.t.length-nb.q.title.length))+'<span class="ut">'+esc(nb.q.title)+'</span>':esc(nb.t))+'</button><button class="btn ghost sm2" data-a="review">DAILY REVIEW ('+due+')</button><button class="btn ghost sm2" data-a="retry">RETRY MISSES ('+m+')</button>'+(redo.length?'<button class="btn ghost sm2" data-a="redo">REDO SOLVES ('+redo.length+')</button>':'')+'<button class="btn blue sm2" data-a="raid">BOSS RAID</button></div>'+
    '<div class="todo"><span>Before you start (optional):</span><label><input type="checkbox">phone out of reach</label><label><input type="checkbox">water</label><label><input type="checkbox">60 s of movement</label><label><input type="checkbox">timer on (T)</label></div></div>'+
    '<div class="qgrid">'+cards+'</div>'+tree+
    '<div class="panel" style="margin-top:34px"><h2>Badges</h2><div class="badges">'+bd+'</div></div>';
@@ -396,7 +399,7 @@ function sLab(b,q,s){
   const lv=$(b,'#lv');
   const tpl=s.svg?String(s.svg).replace(/\{\{([^}]+)\}\}/g,(m,e)=>'{{'+e+'}}'):null;
   const tplFns=tpl?[...tpl.matchAll(/\{\{([^}]+)\}\}/g)].map(m=>[m[0],compile(m[1],names)]):[];
-  const series=(s.plot&&s.plot.series||[]).map((p,i)=>Object.assign({color:['#e63946','#1f7fd1','#12213f'][i%3]},p,{fn:compile(p.expr,names.concat('x'))}));
+  const series=(s.plot&&s.plot.series||[]).map((p,i)=>Object.assign({color:PL.series[i%PL.series.length]},p,{fn:compile(p.expr,names.concat('x'))}));
   function draw(){
     C.forEach(c=>{$(b,'[data-v='+c.id+']').textContent=fnum(+vals[c.id],c.fmt||'')+(c.unit?' '+c.unit:'')});
     O.forEach((o,i)=>{$(b,'[data-o="'+i+'"]').textContent=fnum(o.fn(vals),o.fmt||'')+(o.unit?' '+o.unit:'')});
@@ -418,14 +421,14 @@ function plotSvg(P,series,vals,names){
   const stp=niceStep((ymax-ymin)/4);if(P.ymin==null)ymin=Math.floor(ymin/stp)*stp;if(P.ymax==null)ymax=Math.ceil(ymax/stp)*stp;
   const sx=x=>L+(x-x0)/(x1-x0)*(W-L-Rr),sy=y=>H-B-(y-ymin)/(ymax-ymin)*(H-B-T);
   let g='';
-  for(let yv=ymin;yv<=ymax+stp*.001;yv+=stp){const y=sy(yv);g+='<line x1="'+L+'" y1="'+y+'" x2="'+(W-Rr)+'" y2="'+y+'" stroke="#c4e8ff" stroke-width="2"/><text x="'+(L-8)+'" y="'+(y+5)+'" text-anchor="end" font-size="15" font-family="monospace" fill="#40527a">'+axisFmt(yv)+'</text>'}
-  for(let i=0;i<=4;i++){const xv=x0+(x1-x0)*i/4,x=sx(xv);g+='<text x="'+x+'" y="'+(H-B+22)+'" text-anchor="middle" font-size="15" font-family="monospace" fill="#40527a">'+axisFmt(xv)+'</text>'}
-  g+='<rect x="'+L+'" y="'+T+'" width="'+(W-L-Rr)+'" height="'+(H-B-T)+'" fill="none" stroke="#12213f" stroke-width="3"/>';
-  series.forEach((se,k)=>{g+='<polyline fill="none" stroke="'+se.color+'" stroke-width="4" stroke-linejoin="round" points="'+pts[k].filter(p=>isFinite(p[1])).map(p=>sx(p[0]).toFixed(1)+','+sy(p[1]).toFixed(1)).join(' ')+'"/>';
-    if(P.at&&vals[P.at]!=null){const xv=Math.min(x1,Math.max(x0,vals[P.at])),yv=se.fn(Object.assign({},vals,{x:xv}));if(isFinite(yv))g+='<rect x="'+(sx(xv)-7)+'" y="'+(sy(yv)-7)+'" width="14" height="14" fill="'+se.color+'" stroke="#12213f" stroke-width="3"/>'}
-    if(series.length>1&&se.label)g+='<rect x="'+(L+10)+'" y="'+(T+8+k*22)+'" width="14" height="14" fill="'+se.color+'"/><text x="'+(L+30)+'" y="'+(T+20+k*22)+'" font-size="15" font-family="monospace" fill="#12213f">'+esc(se.label)+'</text>'});
-  if(P.at&&vals[P.at]!=null){const xx=sx(Math.min(x1,Math.max(x0,vals[P.at])));g+='<line x1="'+xx+'" y1="'+T+'" x2="'+xx+'" y2="'+(H-B)+'" stroke="#e63946" stroke-width="2" stroke-dasharray="6 5"/>'}
-  g+=(P.xlabel?'<text x="'+((L+W-Rr)/2)+'" y="'+(H-6)+'" text-anchor="middle" font-size="16" font-family="monospace" fill="#12213f">'+esc(P.xlabel)+'</text>':'')+(P.ylabel?'<text transform="translate(14 '+((T+H-B)/2)+') rotate(-90)" text-anchor="middle" font-size="16" font-family="monospace" fill="#12213f">'+esc(P.ylabel)+'</text>':'');
+  for(let yv=ymin;yv<=ymax+stp*.001;yv+=stp){const y=sy(yv);g+='<line x1="'+L+'" y1="'+y+'" x2="'+(W-Rr)+'" y2="'+y+'" stroke="'+PL.grid+'" stroke-width="2"/><text x="'+(L-8)+'" y="'+(y+5)+'" text-anchor="end" font-size="15" font-family="'+PL.font+'" fill="'+PL.axis+'">'+axisFmt(yv)+'</text>'}
+  for(let i=0;i<=4;i++){const xv=x0+(x1-x0)*i/4,x=sx(xv);g+='<text x="'+x+'" y="'+(H-B+22)+'" text-anchor="middle" font-size="15" font-family="'+PL.font+'" fill="'+PL.axis+'">'+axisFmt(xv)+'</text>'}
+  g+='<rect x="'+L+'" y="'+T+'" width="'+(W-L-Rr)+'" height="'+(H-B-T)+'" fill="none" stroke="'+PL.ink+'" stroke-width="'+PL.bw+'" rx="'+(PL.bw<3?8:0)+'"/>';
+  series.forEach((se,k)=>{g+='<polyline fill="none" stroke="'+se.color+'" stroke-width="'+PL.lw+'" stroke-linecap="round" stroke-linejoin="round" points="'+pts[k].filter(p=>isFinite(p[1])).map(p=>sx(p[0]).toFixed(1)+','+sy(p[1]).toFixed(1)).join(' ')+'"/>';
+    if(P.at&&vals[P.at]!=null){const xv=Math.min(x1,Math.max(x0,vals[P.at])),yv=se.fn(Object.assign({},vals,{x:xv}));if(isFinite(yv))g+='<rect x="'+(sx(xv)-7)+'" y="'+(sy(yv)-7)+'" width="14" height="14" fill="'+se.color+'" stroke="'+PL.ink+'" stroke-width="'+PL.mw+'" rx="'+(PL.bw<3?7:0)+'"/>'}
+    if(series.length>1&&se.label)g+='<rect x="'+(L+10)+'" y="'+(T+8+k*22)+'" width="14" height="14" fill="'+se.color+'"/><text x="'+(L+30)+'" y="'+(T+20+k*22)+'" font-size="15" font-family="'+PL.font+'" fill="'+PL.ink+'">'+esc(se.label)+'</text>'});
+  if(P.at&&vals[P.at]!=null){const xx=sx(Math.min(x1,Math.max(x0,vals[P.at])));g+='<line x1="'+xx+'" y1="'+T+'" x2="'+xx+'" y2="'+(H-B)+'" stroke="'+PL.at+'" stroke-width="2" stroke-dasharray="6 5"/>'}
+  g+=(P.xlabel?'<text x="'+((L+W-Rr)/2)+'" y="'+(H-6)+'" text-anchor="middle" font-size="16" font-family="'+PL.font+'" fill="'+PL.ink+'">'+esc(P.xlabel)+'</text>':'')+(P.ylabel?'<text transform="translate(14 '+((T+H-B)/2)+') rotate(-90)" text-anchor="middle" font-size="16" font-family="'+PL.font+'" fill="'+PL.ink+'">'+esc(P.ylabel)+'</text>':'');
   return '<svg class="plot" viewBox="0 0 '+W+' '+H+'" width="100%">'+g+'</svg>';
 }
 
