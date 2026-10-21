@@ -2,70 +2,101 @@
 """Theme registry for gamify-learn.
 
 A theme is a look, not a different game: same engine, same course.json. Pick one with
-`build.py course.json --theme pastel` or `"theme": "pastel"` at the top of course.json.
+`build.py course.json --theme minimal` or `"theme": "minimal"` at the top of course.json.
 
-retro   pixel fonts, light-blue sky, red, chunky borders (the default; engine.css alone)
-pastel  minimal, modern, smooth: soft lilac / peach / mint, glass panels, rounded vector icons,
-        system rounded font. Files: assets/themes/pastel/theme.css + theme.js
+retro    8-bit arcade: pixel fonts, light-blue sky, red, chunky borders (the default; engine.css alone)
+minimal  quiet study sheet: cool white paper, ink, one focus blue, a highlighter for key words, hairline rules,
+         no shadows or gradients, Instrument Sans + Crimson Pro for formulas, monoline icons
+modern   bold sticker sheet: 2px ink outlines, hard offset shadows, electric blue + sun yellow, chunky
+         press-down buttons, Bricolage Grotesque headings + Instrument Sans body, flat sticker icons
 
-Illustrations are authored once in the default palette (svgkit.py). For any non-retro theme the build maps
-those colours to the theme palette (and softens corners and shadows), so every existing course can be re-themed
-without touching its JSON.
+Every non-retro theme lives in assets/themes/<name>/ as
+  theme.json  label, browser colour, embedded fonts, background markup, illustration recolouring
+  theme.css   loaded after engine.css (same-specificity rules win)
+  theme.js    sets window.__THEME = {name, icons, palette} before the engine runs
+
+Illustrations are authored once in the retro palette (svgkit.py). For other themes the build maps those
+colours through the theme's "svg.map", scales corner radii and swaps the drop shadow, so any existing course
+can be re-themed without touching its JSON. `pastel` (v1.3.0 preview) is kept as an alias of `minimal`.
 """
+import colorsys
+import json
+import os
 import re
 
-THEMES = {
-    "retro": {"color": "#1d3557"},
-    "pastel": {"color": "#f6f4ff"},
-}
-
-# retro colour (lower-case hex)  ->  pastel colour
-PASTEL = {
-    "#1d3557": "#5b6199",   # NAVY  strokes
-    "#12213f": "#3a3d66",   # INK   text
-    "#e63946": "#ff7f96",   # RED   accent
-    "#a4161a": "#c2415f",   # RED2  accent text
-    "#1f7fd1": "#6f8df0",   # BLUE
-    "#2a9df4": "#79a7f7",
-    "#1769ab": "#4f6fd8",
-    "#bfe6ff": "#dbe4ff",   # BLUE2
-    "#e3f4ff": "#eef2ff",   # SKY
-    "#c4e8ff": "#e0e7ff",   # SKY2
-    "#7cc4f5": "#cfd6ff",
-    "#9fd8ff": "#dde2ff",
-    "#8fe3ff": "#c6ecf0",
-    "#fff8ea": "#fff9ef",   # CREAM
-    "#fffdf6": "#fffefb",   # PAPER
-    "#ffd23f": "#ffd98a",   # GOLD
-    "#1a9a5f": "#35b087",   # OK
-    "#d8f5e6": "#d9f5ea",   # OK2
-    "#8aa0c0": "#a9aed0",   # GREY
-    "#dfe9f4": "#eceefa",   # GREY2
-    "#40527a": "#6a6e94",   # MUT
-    "#ffe3e5": "#ffe6ee",   # PINK
-    "#ff9aa0": "#ffc4cf",
-    "#0e9bb8": "#55c2bb",   # TEAL
-    "#d9552b": "#ff9d6e",   # ORANGE
-    "#ff7a85": "#ffa6b5",   # gradient stops
-    "#2c4a78": "#8f95d6",
-    "#e0c98a": "#f0dca8",   # caption border
-    "#0a1329": "#3a3d66",
-    "#22345f": "#e1dcff",
-}
+HERE = os.path.dirname(os.path.abspath(__file__))
+THEME_DIR = os.path.join(HERE, "..", "assets", "themes")
+ALIASES = {"pastel": "minimal"}
+_RETRO = {"label": "Retro", "color": "#1d3557"}
 _FONT_OLD = "'Segoe UI',Roboto,Helvetica,Arial,sans-serif"
-_FONT_NEW = "ui-rounded,'SF Pro Rounded','Nunito','Segoe UI Variable Display','Segoe UI',system-ui,sans-serif"
 _HEX = re.compile(r"#[0-9a-fA-F]{6}\b")
 _RX = re.compile(r"\brx=(['\"])(\d+(?:\.\d+)?)\1")
 _SHADOW = re.compile(r"<feDropShadow[^>]*/>")
+_cache = {}
 
 
-def _soften(s):
-    """colour map + rounder corners + softer shadow + rounded font, for one SVG/HTML string"""
-    s = _HEX.sub(lambda m: PASTEL.get(m.group(0).lower(), m.group(0)), s)
+def names():
+    """Theme names a user may pick (aliases not listed)."""
+    found = sorted(d for d in os.listdir(THEME_DIR) if os.path.isfile(os.path.join(THEME_DIR, d, "theme.json")))
+    return ["retro"] + found
+
+
+def resolve(name):
+    """Canonical theme name, or None if unknown."""
+    name = ALIASES.get(name, name)
+    return name if name in names() else None
+
+
+def load(name):
+    """theme.json for a theme (retro has a small built-in record)."""
+    if name == "retro":
+        return _RETRO
+    if name not in _cache:
+        with open(os.path.join(THEME_DIR, name, "theme.json"), encoding="utf-8") as f:
+            _cache[name] = json.load(f)
+    return _cache[name]
+
+
+def _hls(h):
+    return colorsys.rgb_to_hls(*(int(h[i:i + 2], 16) / 255 for i in (1, 3, 5)))
+
+
+def _hex(h, l, s):
+    return "#" + "".join(f"{round(v * 255):02x}" for v in colorsys.hls_to_rgb(h, l, s))
+
+
+def _snap(c, svg):
+    """Colour not in the exact map: move it to the nearest theme hue, keep its lightness.
+    Lets hand-picked colours from any palette (e.g. old pastel courses) follow the theme."""
+    hues = svg.get("hues")
+    if not hues:
+        return c
+    h, l, s = _hls(c)
+    if l > .97 or l < .04:
+        return c
+    if s < .16:
+        nh, _, ns = _hls(svg.get("neutral", "#808080"))
+        return _hex(nh, l, min(s, ns))
+    best = min(hues, key=lambda a: min(abs(_hls(a)[0] - h), 1 - abs(_hls(a)[0] - h)))
+    ah, al, as_ = _hls(best)
+    return _hex(ah, l, min(as_, max(s, .35)))
+
+
+def _colour(m, svg):
+    c = m.group(0).lower()
+    return svg["map"].get(c) or _snap(c, svg)
+
+
+def _restyle(s, svg):
+    s = _HEX.sub(lambda m: _colour(m, svg), s)
     if "<svg" in s:
-        s = _RX.sub(lambda m: f"rx={m.group(1)}{round(float(m.group(2)) * 1.8, 1)}{m.group(1)}" if float(m.group(2)) >= 2 else m.group(0), s)
-        s = _SHADOW.sub("<feDropShadow dx='0' dy='4' stdDeviation='4.5' flood-color='#5b4fd0' flood-opacity='.16'/>", s)
-        s = s.replace(_FONT_OLD, _FONT_NEW)
+        k = svg.get("rx_scale", 1)
+        if k != 1:
+            s = _RX.sub(lambda m: f"rx={m.group(1)}{round(float(m.group(2)) * k, 1)}{m.group(1)}" if float(m.group(2)) >= 2 else m.group(0), s)
+        if "shadow" in svg:
+            s = _SHADOW.sub(svg["shadow"], s)
+        if svg.get("font"):
+            s = s.replace(_FONT_OLD, svg["font"])
     return s
 
 
@@ -73,10 +104,14 @@ def retheme(node, theme):
     """Return node with every string re-coloured for `theme` (retro = unchanged)."""
     if theme == "retro":
         return node
-    if isinstance(node, str):
-        return _soften(node) if ("#" in node or "<svg" in node) else node
-    if isinstance(node, list):
-        return [retheme(v, theme) for v in node]
-    if isinstance(node, dict):
-        return {k: retheme(v, theme) for k, v in node.items()}
-    return node
+    svg = load(theme)["svg"]
+
+    def walk(n):
+        if isinstance(n, str):
+            return _restyle(n, svg) if ("#" in n or "<svg" in n) else n
+        if isinstance(n, list):
+            return [walk(v) for v in n]
+        if isinstance(n, dict):
+            return {k: walk(v) for k, v in n.items()}
+        return n
+    return walk(node)

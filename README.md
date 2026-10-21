@@ -1,6 +1,6 @@
 # gamify-learn
 
-**Turn any course material into a study game that teaches in one straight line, from zero to solving problems.** Two looks: retro 8-bit or pastel minimal.
+**Turn any course material into a study game that teaches in one straight line, from zero to solving problems.** Three looks, picked every time: Retro, Minimal or Modern.
 
 Give an AI assistant your lecture slides, PDFs, notes or a textbook chapter. It maps the topic into a prerequisite line, writes a short `course.json`, and this skill's engine turns it into **one offline HTML file**: a light-blue-sky, red-brick, 8-bit game with ordered quests, XP, levels, streaks, badges, boss raids, quizzes, spaced flashcards, and "your turn" problems at the end.
 
@@ -10,19 +10,19 @@ Built for people who find long slides hard to focus on (ADHD-friendly by design,
 
 ## Themes
 
-Same engine, same `course.json`, two looks. Pick one with `python scripts/build.py course.json --theme pastel` or `"theme": "pastel"` in the JSON.
+Same engine, same `course.json`, three looks. The assistant **asks which one you want every time it makes a game** (a three-option picker with previews). Build by hand with `python scripts/build.py course.json --theme minimal` or `"theme": "minimal"` in the JSON.
 
-| `retro` (default) | `pastel` |
+| `retro` (default) | `minimal` | `modern` |
+|---|---|---|
+| 8-bit arcade: pixel fonts, light-blue sky, red bricks, chunky borders | A quiet study sheet: white paper, ink, one focus blue, a yellow highlighter on key words, hairline rules, no shadows. Instrument Sans, formulas in Crimson Pro | A bold sticker sheet on a cutting mat: 2px ink outlines, hard shadows, sun yellow + electric blue, buttons that press down, formulas on a chalkboard slab. Bricolage Grotesque |
+
+| Minimal | Modern |
 |---|---|
-| 8-bit pixel fonts, light-blue sky, red bricks, chunky borders | Minimal, modern, smooth: soft lilac / peach / mint, glass panels, rounded vector icons, system rounded font |
+| ![Minimal map](docs/img/minimal-map.png) | ![Modern map](docs/img/modern-map.png) |
+| ![Minimal decoder](docs/img/minimal-decode.png) | ![Modern decoder](docs/img/modern-decode.png) |
+| ![Minimal quiz](docs/img/minimal-quiz.png) | ![Modern quiz](docs/img/modern-quiz.png) |
 
-![Pastel title](docs/img/pastel-title.png)
-![Pastel map](docs/img/pastel-map.png)
-| | |
-|---|---|
-| ![Pastel decoder](docs/img/pastel-decode.png) | ![Pastel lab](docs/img/pastel-lab.png) |
-
-Illustrations you draw with `svgkit.py` are re-coloured for the chosen theme at build time, so an existing course can be re-themed without editing it. A theme is a folder in `skills/gamify-learn/assets/themes/<name>/` (`theme.css`, `theme.js`) plus an entry in `scripts/themes.py`.
+Illustrations you draw with `svgkit.py` are re-coloured for the chosen theme at build time, so an existing course can be re-themed without editing it. Colours that are not in the theme map snap to the nearest theme hue, so stray colours cannot leak in. A theme is a folder in `skills/gamify-learn/assets/themes/<name>/` (`theme.json`, `theme.css`, `theme.js`); see `references/themes.md`. Fonts are OFL (Instrument Sans, Bricolage Grotesque, Crimson Pro, JetBrains Mono), subset and embedded, so the game still works offline.
 
 ## What makes it different
 

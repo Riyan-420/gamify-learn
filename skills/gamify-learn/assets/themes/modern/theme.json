@@ -1,0 +1,36 @@
+{
+  "label": "Modern",
+  "pitch": "A bold sticker sheet on a cutting mat: ink outlines, hard shadows, electric blue and sun yellow, buttons that press down.",
+  "color": "#121418",
+  "fonts": [
+    {"family": "Bricolage Grotesque", "file": "BricolageGrotesque-Bold-latin.woff", "weight": 700},
+    {"family": "Instrument Sans", "file": "InstrumentSans-Regular-latin.woff", "weight": 400},
+    {"family": "Instrument Sans", "file": "InstrumentSans-Italic-latin.woff", "weight": 400, "style": "italic"},
+    {"family": "Instrument Sans", "file": "InstrumentSans-Bold-latin.woff", "weight": 700},
+    {"family": "Crimson Pro", "file": "CrimsonPro-Regular-latin.woff", "weight": 400},
+    {"family": "Crimson Pro", "file": "CrimsonPro-Italic-latin.woff", "weight": 400, "style": "italic"},
+    {"family": "JetBrains Mono", "file": "JetBrainsMono-Regular-latin.woff", "weight": 400}
+  ],
+  "bg": "",
+  "svg": {
+    "font": "'Instrument Sans',system-ui,sans-serif",
+    "rx_scale": 1.2,
+    "shadow": "<feDropShadow dx='3' dy='3' stdDeviation='0' flood-color='#121418' flood-opacity='1'/>",
+    "map": {
+      "#1d3557": "#121418", "#12213f": "#121418",
+      "#e63946": "#e5372b", "#a4161a": "#b4231a",
+      "#1f7fd1": "#2f5bff", "#2a9df4": "#4a74ff", "#1769ab": "#1f44d6",
+      "#bfe6ff": "#cfdaff", "#e3f4ff": "#eef2ff", "#c4e8ff": "#dde5ff",
+      "#7cc4f5": "#9db4ff", "#9fd8ff": "#c2d1ff", "#8fe3ff": "#bff0e0",
+      "#fff8ea": "#ffffff", "#fffdf6": "#ffffff",
+      "#ffd23f": "#ffc83d", "#1a9a5f": "#12a35f", "#d8f5e6": "#dff7ea",
+      "#8aa0c0": "#8b91a0", "#dfe9f4": "#e6e9f0", "#40527a": "#4a5060",
+      "#ffe3e5": "#ffe6e3", "#ff9aa0": "#ff9b92",
+      "#0e9bb8": "#0fa3a3", "#d9552b": "#ff7a1a",
+      "#ff7a85": "#ff6b5e", "#2c4a78": "#3a3f4b",
+      "#e0c98a": "#121418", "#0a1329": "#121418", "#22345f": "#e6e9f0"
+    },
+    "hues": ["#e5372b", "#ff7a1a", "#ffc83d", "#12a35f", "#0fa3a3", "#2f5bff"],
+    "neutral": "#4a5060"
+  }
+}

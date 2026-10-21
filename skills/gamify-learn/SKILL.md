@@ -1,11 +1,11 @@
 ---
 name: gamify-learn
-description: Turn course material (lecture slides, PDFs, notes, textbook chapters, a syllabus, or just a topic) into a study game (retro or pastel theme), one offline HTML file, that teaches in one straight line from zero to solving problems. Quests unlock in order, every idea is taught once and then deliberately relearned, every formula is decoded symbol by symbol, labs show each symbol acting, and the finale is solving. Built on ADHD and learning-science research. Use when the user wants to learn or revise from material, wants gamified or interactive study material, is preparing for a quiz or exam, says they have ADHD or cannot focus on long slides, or complains that slides show formulas without explaining what things are.
+description: Turn course material (lecture slides, PDFs, notes, textbook chapters, a syllabus, or just a topic) into a study game (the user picks a style each time: retro, minimal or modern), one offline HTML file, that teaches in one straight line from zero to solving problems. Quests unlock in order, every idea is taught once and then deliberately relearned, every formula is decoded symbol by symbol, labs show each symbol acting, and the finale is solving. Built on ADHD and learning-science research. Use when the user wants to learn or revise from material, wants gamified or interactive study material, is preparing for a quiz or exam, says they have ADHD or cannot focus on long slides, or complains that slides show formulas without explaining what things are.
 ---
 
 # gamify-learn
 
-You write a `course.json`; the bundled engine turns it into an HTML game (themes: `retro` light-blue sky and red, or `pastel` minimal, modern, smooth) with XP, levels, streaks, badges, boss raids, quizzes and spaced review. No server, no internet, no dependencies.
+You write a `course.json`; the bundled engine turns it into an HTML game (three styles the learner picks every time: `retro` 8-bit arcade, `minimal` quiet study sheet, `modern` bold sticker sheet) with XP, levels, streaks, badges, boss raids, quizzes and spaced review. No server, no internet, no dependencies.
 
 **The teaching is the point, the game is the wrapper.** The learner may have ADHD and has never seen the topic. They want maximum learning, interest that stays high, concepts relearned several times, everything linked into one story, and to finish able to *solve* problems. Everything below serves that.
 
@@ -37,14 +37,15 @@ Full notes, limits and sources in `references/evidence.md`. Summary the assistan
 
 ## Workflow
 
-1. **Ask before assuming** (max 3 short questions, skip what is already known): where is the material and which parts matter; how much do they already know (default **zero**); exam format/deadline. Also which **theme** if they have not said: `retro` (8-bit, default) or `pastel` (minimal, modern, smooth, soft colours, vector icons).
+1. **Ask the style first, every time.** Unless the user named one in this request, ask which style the game should use with the three-option picker in `references/themes.md` (AskUserQuestion with previews: **Retro**, **Minimal**, **Modern**). Never pick for them, never reuse a past choice silently. Store the answer as `"theme"` in course.json.
+   Then **ask before assuming** (max 3 short questions, skip what is already known): where is the material and which parts matter; how much do they already know (default **zero**); exam format/deadline.
 2. **Extract.** `python scripts/extract_text.py <file-or-folder> -o extracted` (pdf, pptx, docx, txt, md, html; `--images` saves pptx pictures). Scanned PDFs have no text: say so. Read all of it before planning.
 3. **Map the line.** Write the prerequisite map: every concept in the source, what it depends on, the order that respects the dependencies, and which quest teaches it. Group into quests of at most about 5 new concepts. Resolve conflicts between lecture and book openly. **Show the user the ordered quest list and the concept list and get a yes before writing the JSON.** Add a last capstone quest.
 4. **Author `course.json`** following `references/authoring-guide.md` (how to teach), `references/learning-line.md` (how to sequence and relearn) and `references/schema.md` (fields). Copy `examples/compound-interest/course.json`: it uses every feature.
 5. **Check, build, test.**
    ```
    python scripts/validate.py course.json --strict
-   python scripts/build.py course.json -o <Name>.html [--theme pastel]
+   python scripts/build.py course.json -o <Name>.html [--theme retro|minimal|modern]
    python scripts/smoke_test.py <Name>.html
    ```
    Fix every ERROR. In `--strict` mode every warning must be fixed or consciously accepted (and told to the user). `?reveal` on the URL shows every screen fully (screenshots, printing).
@@ -73,9 +74,11 @@ Full notes, limits and sources in `references/evidence.md`. Summary the assistan
 | `scripts/smoke_test.py` | headless Chrome renders every screen and checks the lab maths |
 | `scripts/mobile_test.py` | optional: phone-emulated check of every screen for sideways overflow |
 | `scripts/svgkit.py` | helpers for clean, staged explanatory illustrations |
-| `scripts/themes.py` | theme registry; re-colours illustrations for non-retro themes |
-| `assets/engine/`, `assets/fonts/` | the game (CSS, JS, template) and OFL pixel fonts (retro) |
-| `assets/themes/pastel/` | pastel theme: `theme.css`, `theme.js` (smooth vector icons + plot palette) |
+| `scripts/themes.py` | theme registry (reads each `theme.json`); re-colours illustrations for non-retro themes |
+| `assets/engine/` | the game (CSS, JS, template) |
+| `assets/themes/minimal/`, `assets/themes/modern/` | `theme.json` (fonts, colours, illustration recolouring), `theme.css`, `theme.js` (icons + plot palette) |
+| `assets/fonts/` | OFL fonts: pixel fonts (retro), Instrument Sans, Bricolage Grotesque, Crimson Pro, JetBrains Mono (subset WOFF) |
+| `references/themes.md` | the style picker to show the user, what each theme looks like, how to add one |
 | `references/learning-line.md` | how to sequence, link and relearn |
 | `references/authoring-guide.md` | how to write a course that teaches |
 | `references/schema.md` | every field of course.json |

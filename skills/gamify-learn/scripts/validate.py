@@ -12,6 +12,9 @@ The concept ledger is what keeps the story linear and forces relearning:
 """
 import json, os, re, sys
 
+sys.path.insert(0, os.path.dirname(os.path.abspath(__file__)))
+import themes
+
 STEP_TYPES = {"predict", "idea", "decode", "worked", "lab", "figure", "dump", "quiz", "cards", "html", "flow", "compare", "solve"}
 PASSIVE = {"idea", "decode", "worked", "figure", "flow", "compare", "html"}
 FORMULA_HINT = re.compile(r"(?<![A-Za-z])[A-Za-z]\w{0,3}\s*=\s*[^=\s]|\b\w\s*[\^/×·*]\s*\w|[√Σ∫≈≤≥]")
@@ -24,8 +27,8 @@ def check(c, base="."):
         return ["course.json must be an object"], W
     if not c.get("title"):
         E.append("missing top-level 'title'")
-    if c.get("theme", "retro") not in ("retro", "pastel"):
-        E.append("'theme' must be 'retro' or 'pastel' (see scripts/themes.py)")
+    if not themes.resolve(c.get("theme", "retro")):
+        E.append("'theme' must be one of " + ", ".join(themes.names()) + " (see references/themes.md)")
     qs = c.get("quests")
     if not isinstance(qs, list) or not qs:
         E.append("'quests' must be a non-empty list")

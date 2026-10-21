@@ -1,12 +1,13 @@
 #!/usr/bin/env python3
 """Build a single self-contained HTML game from a course.json.
 
-usage: python build.py course.json [-o out.html] [--theme retro|pastel] [--no-validate]
+usage: python build.py course.json [-o out.html] [--theme retro|minimal|modern] [--no-validate]
 
 Images referenced by relative path (figure steps: "src", or <img src="..."> inside html/viz strings)
 are inlined as base64 so the output is one file that works offline.
 
-Themes (see themes.py): `--theme pastel` or `"theme": "pastel"` in course.json. Default is retro.
+Themes (see themes.py and references/themes.md): `--theme minimal` or `"theme": "minimal"` in course.json.
+Default is retro. `pastel` is an alias of minimal.
 """
 import argparse, base64, json, mimetypes, os, re, sys
 
@@ -74,7 +75,7 @@ def main():
     ap = argparse.ArgumentParser()
     ap.add_argument("course")
     ap.add_argument("-o", "--out")
-    ap.add_argument("--theme", choices=sorted(themes.THEMES), help="look of the game (default: course.json \"theme\", else retro)")
+    ap.add_argument("--theme", choices=themes.names() + sorted(themes.ALIASES), help="look of the game (default: course.json \"theme\", else retro)")
     ap.add_argument("--no-validate", action="store_true")
     ap.add_argument("--strict", action="store_true", help="treat validation warnings as errors")
     a = ap.parse_args()
@@ -95,10 +96,14 @@ def main():
             print(f"{len(errs)} error(s), {len(warns) if a.strict else 0} warning(s) counted as errors. Fix them or pass --no-validate.")
             sys.exit(1)
 
-    theme = a.theme or course.get("theme", "retro")
-    if theme not in themes.THEMES:
-        print(f"unknown theme {theme!r}; choose one of: {', '.join(sorted(themes.THEMES))}")
+    asked = a.theme or course.get("theme", "retro")
+    theme = themes.resolve(asked)
+    if not theme:
+        print(f"unknown theme {asked!r}; choose one of: {', '.join(themes.names())}")
         sys.exit(1)
+    if asked != theme:
+        print(f"  note: theme {asked!r} is now called {theme!r}")
+    tj = themes.load(theme)
     inline_images(course, os.path.dirname(course_path))
     course = themes.retheme(course, theme)
     out = a.out or os.path.splitext(course_path)[0] + ".html"
@@ -111,14 +116,16 @@ def main():
         bg = '<div class="cloud c1"></div><div class="cloud c2"></div><div class="cloud c3"></div>'
         floor = '<div class="floor"></div>'
     else:
-        fonts = ""
+        fonts = "\n".join(
+            "@font-face{font-family:'%s';src:url(data:font/woff;base64,%s) format('woff');font-weight:%s;font-style:%s;font-display:swap}"
+            % (f["family"], b64("fonts", f["file"]), f.get("weight", 400), f.get("style", "normal")) for f in tj.get("fonts", []))
         theme_css = read("themes", theme, "theme.css")
         theme_js = "<script>\n" + read("themes", theme, "theme.js") + "\n</script>"
-        bg = '<div class="aura a1"></div><div class="aura a2"></div><div class="aura a3"></div>'
+        bg = tj.get("bg", "")
         floor = ""
     page = (read("engine", "template.html")
             .replace("{{LANG}}", course.get("lang", "en"))
-            .replace("{{THEME_COLOR}}", themes.THEMES[theme]["color"])
+            .replace("{{THEME_COLOR}}", tj["color"])
             .replace("{{THEME}}", theme)
             .replace("{{TITLE}}", re.sub(r"<[^>]+>", "", course["title"]).replace("&", "&amp;"))
             .replace("{{FONTS}}", fonts)

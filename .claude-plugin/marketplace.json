@@ -7,8 +7,8 @@
     {
       "name": "gamify-learn",
       "source": "./",
-      "description": "Turn course material into a retro-game study game (one offline HTML file)."
+      "description": "Turn course material into a study game in Retro, Minimal or Modern style (one offline HTML file)."
     }
   ],
-  "description": "Study-game skills: turn course material into retro-style, ADHD-friendly quests, decoders, labs and quizzes."
+  "description": "Study-game skills: turn course material into ADHD-friendly quests (Retro, Minimal or Modern style), decoders, labs and quizzes."
 }

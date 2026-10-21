@@ -1,0 +1,86 @@
+{
+  "label": "Minimal",
+  "pitch": "A quiet study sheet: cool white paper, ink, one focus blue, a highlighter for key words.",
+  "color": "#f7f8fa",
+  "fonts": [
+    {
+      "family": "Instrument Sans",
+      "file": "InstrumentSans-Regular-latin.woff",
+      "weight": 400
+    },
+    {
+      "family": "Instrument Sans",
+      "file": "InstrumentSans-Italic-latin.woff",
+      "weight": 400,
+      "style": "italic"
+    },
+    {
+      "family": "Instrument Sans",
+      "file": "InstrumentSans-Bold-latin.woff",
+      "weight": 700
+    },
+    {
+      "family": "Crimson Pro",
+      "file": "CrimsonPro-Regular-latin.woff",
+      "weight": 400
+    },
+    {
+      "family": "Crimson Pro",
+      "file": "CrimsonPro-Italic-latin.woff",
+      "weight": 400,
+      "style": "italic"
+    },
+    {
+      "family": "JetBrains Mono",
+      "file": "JetBrainsMono-Regular-latin.woff",
+      "weight": 400
+    }
+  ],
+  "bg": "",
+  "svg": {
+    "font": "'Instrument Sans',system-ui,sans-serif",
+    "rx_scale": 1,
+    "shadow": "<feDropShadow dx='0' dy='0' stdDeviation='0' flood-opacity='0'/>",
+    "map": {
+      "#1d3557": "#2b303b",
+      "#12213f": "#14161b",
+      "#e63946": "#d4442e",
+      "#a4161a": "#a3311f",
+      "#1f7fd1": "#2346d8",
+      "#2a9df4": "#3d63e6",
+      "#1769ab": "#1b3aae",
+      "#bfe6ff": "#dfe6fb",
+      "#e3f4ff": "#f1f4fb",
+      "#c4e8ff": "#e3e8f4",
+      "#7cc4f5": "#aebcec",
+      "#9fd8ff": "#c9d4f3",
+      "#8fe3ff": "#cfe3ef",
+      "#fff8ea": "#ffffff",
+      "#fffdf6": "#ffffff",
+      "#ffd23f": "#f4c430",
+      "#1a9a5f": "#17784a",
+      "#d8f5e6": "#e3f3ea",
+      "#8aa0c0": "#9aa1ae",
+      "#dfe9f4": "#e8eaef",
+      "#40527a": "#5e6472",
+      "#ffe3e5": "#fbe9e6",
+      "#ff9aa0": "#f0a397",
+      "#0e9bb8": "#0e7490",
+      "#d9552b": "#c2571a",
+      "#ff7a85": "#e0705e",
+      "#2c4a78": "#5a6274",
+      "#e0c98a": "#e2e4e9",
+      "#0a1329": "#14161b",
+      "#22345f": "#e8eaef"
+    },
+    "hues": [
+      "#d4442e",
+      "#c2571a",
+      "#f4c430",
+      "#17784a",
+      "#0e7490",
+      "#2346d8"
+    ],
+    "neutral": "#5e6472"
+  }
+}

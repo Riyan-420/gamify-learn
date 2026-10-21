@@ -30,7 +30,7 @@ Relative image paths (`"src": "fig/a.png"`) are inlined as base64 by `build.py`,
 }
 ```
 
-`theme` is the look: `retro` (default: pixel fonts, sky, red) or `pastel` (minimal, modern, smooth). `build.py --theme pastel` overrides it. Same course, same engine; illustrations written in the default palette are re-coloured automatically. See `scripts/themes.py`.
+`theme` is the look the learner picked: `retro` (default: pixel fonts, sky, red), `minimal` (quiet study sheet) or `modern` (bold sticker sheet). `pastel` still works as an alias of `minimal`. `build.py --theme <name>` overrides it. See `themes.md`. Same course, same engine; illustrations written in the default palette are re-coloured automatically. See `scripts/themes.py`.
 `slug` namespaces the saved progress in the browser. Give every course its own slug.
 `linear` (default true) locks each quest until the previous one is finished; the learner can switch the lock off in Menu.
 `concepts` gives display names to concept ids (ids used in `teaches`, `needs`, `concepts`). Any id used in `teaches` is added automatically with a prettified name if you leave it out. See `learning-line.md`.
