@@ -61,7 +61,7 @@ def check(c, base="."):
         for r in (v if isinstance(v, list) else [v]):
             sid = str(r).split(":", 1)[0].strip()
             if sid not in src_ids:
-                E.append(f"{where}: src '{r}' names unknown source '{sid}' (add it to top-level 'sources')")
+                E.append(f"{where}: source '{r}' names unknown source '{sid}' (add it to top-level 'sources')")
 
     seen_q = set()
     intro = {}          # concept id -> (quest idx, position)
@@ -98,13 +98,13 @@ def check(c, base="."):
             W.append(f"{P}: add a 'question' (the mystery this quest answers; curiosity keeps attention)")
         for cid in q.get("needs", []):
             uses.append((cid, qi, 0, f"{P} 'needs'"))
-        if q.get("src") is not None:
-            src_ok(q["src"], P)
+        if q.get("source") is not None:
+            src_ok(q["source"], P)
         elif src_ids:
-            W.append(f"{P}: no 'src' (which lecture slides / book pages this quest comes from); add it if the source shows it")
+            W.append(f"{P}: no 'source' (which lecture slides / book pages this quest comes from); add it if the material shows it")
         for si, s in enumerate(steps, 1):
-            if s.get("src") is not None:
-                src_ok(s["src"], f"{P} step {si}")
+            if s.get("source") is not None:
+                src_ok(s["source"], f"{P} step {si}")
 
         qids = set()
         for j, z in enumerate(quiz, 1):
@@ -125,8 +125,8 @@ def check(c, base="."):
             qids.add(zid)
             if z.get("id") and not re.fullmatch(r"[A-Za-z0-9_]+", z["id"]):
                 E.append(f"{Z}: id must be letters/digits/underscore only")
-            if z.get("src") is not None:
-                src_ok(z["src"], Z)
+            if z.get("source") is not None:
+                src_ok(z["source"], Z)
             if z.get("why") and len(z["why"]) < 25:
                 W.append(f"{Z}: 'why' is very short; explain why the answer is right AND what the tempting wrong answer gets wrong")
             if z.get("answer") and w and len(str(z["answer"])) > 2 * max(len(str(x)) for x in w) + 20:

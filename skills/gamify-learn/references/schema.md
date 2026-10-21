@@ -46,9 +46,9 @@ The learner should always see **where in their material** they are: which lectur
 ```
 `unit` is how ranges are counted: `slide`, `page`, `ch` (or `chapter`), `section`, `part`, `min` (video time).
 
-Then add `src` to a quest (its whole span), a step, or a quiz question: `"src": "L6:28-31"`, `"src": "JM:9.7"`, or a list `["L6:3-12", "JM:9"]`. The game shows it on the quest card ("Lecture 6, slides 28–31"), on the mission screen in full ("Lecture 6 (MT, Attention & Self-Attention), slides 3–31"), on every step (the step's own `src`, else the quest's), and on every quiz question, including warm-ups, daily review and the boss raid, where knowing which lecture a question came from matters most.
+Then add `source` to a quest (its whole span), a step, or a quiz question: `"source": "L6:28-31"`, `"source": "JM:9.7"`, or a list `["L6:3-12", "JM:9"]`. The game shows it on the quest card ("Lecture 6, slides 28–31"), on the mission screen in full ("Lecture 6 (MT, Attention & Self-Attention), slides 3–31"), on every step (the step's own `source`, else the quest's), and on every quiz question, including warm-ups, daily review and the boss raid, where knowing which lecture a question came from matters most.
 
-Never guess numbers: take them from the `--- page N ---` / `--- slide N ---` markers that `extract_text.py` writes. If the material has no numbers, leave `src` out. `validate.py` rejects a `src` that names an unknown source, and in `--strict` mode warns about quests without `src` once `sources` exists.
+Never guess numbers: take them from the `--- page N ---` / `--- slide N ---` markers that `extract_text.py` writes. If the material has no numbers, leave `source` out. (The field is `source`, not `src`: `src` is a figure's image path.) `validate.py` rejects a `source` that names an unknown source, and in `--strict` mode warns about quests without `source` once `sources` exists.
 `linear` (default true) locks each quest until the previous one is finished; the learner can switch the lock off in Menu.
 `concepts` gives display names to concept ids (ids used in `teaches`, `needs`, `concepts`). Any id used in `teaches` is added automatically with a prettified name if you leave it out. See `learning-line.md`.
 
