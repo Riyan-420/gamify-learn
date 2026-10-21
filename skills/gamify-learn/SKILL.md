@@ -61,7 +61,7 @@ Full notes, limits and sources in `references/evidence.md`. Summary the assistan
 - **Real numbers, computed:** run Python for every worked and solve value; label every step; state units; add a sanity check.
 - **Name the trap** that costs marks.
 - **Quiz well:** tempting distractors, `why` explains the right answer and the best wrong one, `tag` points to the source section, `concepts` lists what it tests.
-- **Show where it comes from.** Give every quest a `source` (lecture + slides, book + chapter/pages) and give steps and quiz questions their own `source` when they come from a specific slide. Only real numbers from the material.
+- **Show where it comes from.** Give every quest a `source` (lecture + slides, book + chapter/pages) and give steps and quiz questions their own `source` when they come from a specific slide. Only real numbers from the material. **Number them the way the learner will find them**: use the page numbers of the exact file they open (the PDF), not the .pptx slide index. A hidden slide in the .pptx shifts every later number by one (check with python-pptx: `slide.element.get('show') == '0'`), and say so in the course `about` text.
 - **Do not invent.** Everything traces to the source or to facts you are sure of. If the source is unclear, wrong or inconsistent, tell the user rather than smoothing it over.
 - **Figures and copyright:** reuse source figures only for the user's own study, with caption and `credit`. Never publish copyrighted material.
 
