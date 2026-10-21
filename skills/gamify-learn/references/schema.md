@@ -32,6 +32,23 @@ Relative image paths (`"src": "fig/a.png"`) are inlined as base64 by `build.py`,
 
 `theme` is the look the learner picked: `retro` (default: pixel fonts, sky, red), `minimal` (quiet study sheet) or `modern` (bold sticker sheet). `pastel` still works as an alias of `minimal`. `build.py --theme <name>` overrides it. See `themes.md`. Same course, same engine; illustrations written in the default palette are re-coloured automatically. See `scripts/themes.py`.
 `slug` namespaces the saved progress in the browser. Give every course its own slug.
+
+### Sources: where each part comes from
+
+The learner should always see **where in their material** they are: which lecture and slide, which book chapter or page. Optional, but use it whenever the source has numbers.
+
+```json
+"sources": [
+  {"id": "L5", "label": "Lecture 5", "title": "Language Modelling I", "unit": "slide"},
+  {"id": "L6", "label": "Lecture 6", "title": "MT, Attention & Self-Attention", "unit": "slide"},
+  {"id": "JM", "label": "Book", "title": "Jurafsky & Martin, 3rd ed.", "unit": "ch"}
+]
+```
+`unit` is how ranges are counted: `slide`, `page`, `ch` (or `chapter`), `section`, `part`, `min` (video time).
+
+Then add `src` to a quest (its whole span), a step, or a quiz question: `"src": "L6:28-31"`, `"src": "JM:9.7"`, or a list `["L6:3-12", "JM:9"]`. The game shows it on the quest card ("Lecture 6, slides 28–31"), on the mission screen in full ("Lecture 6 (MT, Attention & Self-Attention), slides 3–31"), on every step (the step's own `src`, else the quest's), and on every quiz question, including warm-ups, daily review and the boss raid, where knowing which lecture a question came from matters most.
+
+Never guess numbers: take them from the `--- page N ---` / `--- slide N ---` markers that `extract_text.py` writes. If the material has no numbers, leave `src` out. `validate.py` rejects a `src` that names an unknown source, and in `--strict` mode warns about quests without `src` once `sources` exists.
 `linear` (default true) locks each quest until the previous one is finished; the learner can switch the lock off in Menu.
 `concepts` gives display names to concept ids (ids used in `teaches`, `needs`, `concepts`). Any id used in `teaches` is added automatically with a prettified name if you leave it out. See `learning-line.md`.
 

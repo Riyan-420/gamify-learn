@@ -39,7 +39,7 @@ Full notes, limits and sources in `references/evidence.md`. Summary the assistan
 
 1. **Ask the style first, every time.** Unless the user named one in this request, ask which style the game should use with the three-option picker in `references/themes.md` (AskUserQuestion with previews: **Retro**, **Minimal**, **Modern**). Never pick for them, never reuse a past choice silently. Store the answer as `"theme"` in course.json.
    Then **ask before assuming** (max 3 short questions, skip what is already known): where is the material and which parts matter; how much do they already know (default **zero**); exam format/deadline.
-2. **Extract.** `python scripts/extract_text.py <file-or-folder> -o extracted` (pdf, pptx, docx, txt, md, html; `--images` saves pptx pictures). Scanned PDFs have no text: say so. Read all of it before planning.
+2. **Extract.** `python scripts/extract_text.py <file-or-folder> -o extracted` (pdf, pptx, docx, txt, md, html; `--images` saves pptx pictures). Scanned PDFs have no text: say so. Read all of it before planning. **Note the slide / page / chapter number of everything you will teach** (the extractor marks `--- slide N ---` and `--- page N ---`): the game shows the learner where each quest, step and question comes from (`sources` + `src`, see schema.md).
 3. **Map the line.** Write the prerequisite map: every concept in the source, what it depends on, the order that respects the dependencies, and which quest teaches it. Group into quests of at most about 5 new concepts. Resolve conflicts between lecture and book openly. **Show the user the ordered quest list and the concept list and get a yes before writing the JSON.** Add a last capstone quest.
 4. **Author `course.json`** following `references/authoring-guide.md` (how to teach), `references/learning-line.md` (how to sequence and relearn) and `references/schema.md` (fields). Copy `examples/compound-interest/course.json`: it uses every feature.
 5. **Check, build, test.**
@@ -61,6 +61,7 @@ Full notes, limits and sources in `references/evidence.md`. Summary the assistan
 - **Real numbers, computed:** run Python for every worked and solve value; label every step; state units; add a sanity check.
 - **Name the trap** that costs marks.
 - **Quiz well:** tempting distractors, `why` explains the right answer and the best wrong one, `tag` points to the source section, `concepts` lists what it tests.
+- **Show where it comes from.** Give every quest a `src` (lecture + slides, book + chapter/pages) and give steps and quiz questions their own `src` when they come from a specific slide. Only real numbers from the material.
 - **Do not invent.** Everything traces to the source or to facts you are sure of. If the source is unclear, wrong or inconsistent, tell the user rather than smoothing it over.
 - **Figures and copyright:** reuse source figures only for the user's own study, with caption and `credit`. Never publish copyrighted material.
 

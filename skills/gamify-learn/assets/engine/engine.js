@@ -59,6 +59,20 @@ QUESTS.forEach((q,i)=>{
   q.cardsList=(q.cards||[]).map((c,j)=>{const id=q.id+'-c'+(j+1);CARDS[id]={f:c.front||c.f,b:c.back||c.b,quest:q.id,concepts:c.concepts||[]};return id});
   q.steps=buildSteps(q);
 });
+/* ---------- sources: where each part comes from (lecture slides, book chapters, pages) ----------
+   course.sources = [{id:'L6', label:'Lecture 6', title:'MT, Attention & Self-Attention', unit:'slide'}]
+   src on a quest, step or quiz question = 'L6:28-31' (or a list of them). Missing = shown nowhere, never guessed. */
+const SRC={};(D.sources||[]).forEach(s=>{if(s&&s.id)SRC[s.id]=s});
+const UNIT={slide:['slide','slides'],page:['p.','pp.'],ch:['ch.','ch.'],chapter:['ch.','ch.'],section:['§','§§'],part:['part','parts'],min:['at','at']};
+function srcText(v,long){
+  return (v==null?[]:Array.isArray(v)?v:[v]).map(r=>{
+    const m=String(r).match(/^([^:]+)(?::\s*(.+))?$/),s=m&&SRC[m[1].trim()];if(!s)return esc(r);
+    const rng=(m[2]||'').trim(),u=UNIT[s.unit||'page']||[s.unit,s.unit];
+    return esc(s.label||s.id)+(long&&s.title?' ('+esc(s.title)+')':'')+(rng?', '+u[/[-,]/.test(rng)?1:0]+' '+esc(rng.replace(/(\d)\s*-\s*(\d)/g,'$1–$2')):'');
+  }).join('; ');
+}
+const questById=id=>QUESTS.find(q=>q.id===id);
+const qSrc=Qn=>Qn&&(Qn.src||(questById(Qn.quest)||{}).src);
 function buildSteps(q){
   const out=[{t:'mission'}];const placed=new Set();let cardsPlaced=false;
   if(q.n>1&&q.warmup!==false&&QUESTS.slice(0,q.n-1).some(p=>p.quiz.length))out.push({t:'warmup'});
@@ -248,7 +262,7 @@ function rMap(){
   const tot=Object.keys(S.ans).length,right=Object.values(S.ans).filter(a=>a.last).length;
   const sids=Object.keys(SOLVE),sdone=sids.filter(id=>S.solves[id]&&S.solves[id].r!=='no').length,redo=sids.filter(id=>S.solves[id]&&S.solves[id].r==='no');
   const cards=QUESTS.map((q,i)=>{const st=qStats(q),lock=isLocked(i);const stars=questDone(q)?(st.n&&st.first===st.n?3:st.acc>=.7?2:1):0;
-    return '<div class="qc'+(questDone(q)?' done':'')+(lock?' locked':'')+(nb.q&&nb.q.id===q.id?' rec':'')+'" data-q="'+i+'" tabindex="0" role="button"><span class="w">WORLD '+esc(q.world)+(lock?'  LOCKED':'')+'</span><h3>'+esc(q.title)+'</h3>'+(q.question?'<div class="qs">? '+fmt(q.question)+'</div>':'')+'<div class="stars">'+[1,2,3].map(k=>icon('star',3).replace('<svg','<svg style="opacity:'+(k<=stars?1:.2)+'"')).join('')+'</div><div class="m">'+q.minutes+' min  |  '+q.quiz.length+' quiz Qs</div><div class="pb"><i style="width:'+st.pc+'%"></i></div></div>'}).join('');
+    return '<div class="qc'+(questDone(q)?' done':'')+(lock?' locked':'')+(nb.q&&nb.q.id===q.id?' rec':'')+'" data-q="'+i+'" tabindex="0" role="button"><span class="w">WORLD '+esc(q.world)+(lock?'  LOCKED':'')+'</span>'+(q.src?'<div class="src">'+srcText(q.src)+'</div>':'')+'<h3>'+esc(q.title)+'</h3>'+(q.question?'<div class="qs">? '+fmt(q.question)+'</div>':'')+'<div class="stars">'+[1,2,3].map(k=>icon('star',3).replace('<svg','<svg style="opacity:'+(k<=stars?1:.2)+'"')).join('')+'</div><div class="m">'+q.minutes+' min  |  '+q.quiz.length+' quiz Qs</div><div class="pb"><i style="width:'+st.pc+'%"></i></div></div>'}).join('');
   const bd=Object.keys(BADGES).map(k=>'<div class="bd'+(S.badges[k]?'':' lock')+'">'+icon(BADGES[k][0],3)+'<span><b>'+BADGES[k][1]+'</b><br>'+BADGES[k][2]+'</span></div>').join('');
   const tree=CONLIST.length?'<div class="panel"><h2>Skill line</h2><p class="mut sm" style="margin-bottom:10px">Every concept, in the order you learn it. Pips fill when you answer questions about it correctly across different quests: that is the relearning.</p><div class="tree">'+CONLIST.map(c=>{const mp=mastery(c.id);return '<span class="cn m'+mp+'" title="Taught in quest '+(c.quest+1)+'"><b>'+esc(c.name)+'</b><span class="pips">'+[0,1,2].map(k=>'<i class="pp'+(k<mp?' on':'')+'"></i>').join('')+'</span></span>'}).join('')+'</div></div>':'';
   root.innerHTML='<div class="panel"><div class="chips"><span class="chip r">WORLD MAP</span></div><h1>'+esc(D.title)+'</h1><p class="mut" style="margin-top:8px">'+fmt(D.subtitle||'')+'</p>'+track(-1)+
@@ -269,7 +283,8 @@ function rQuest(){
   const q=QUESTS[V.q],s=q.steps[V.i];where='Q'+q.n+'  '+(V.i+1)+'/'+q.steps.length;
   gated=false;
   const chip=({mission:'MISSION',predict:'PREDICT',idea:'LEARN',decode:'DECODER',worked:'WORKED EXAMPLE',lab:'LAB',figure:'FIGURE',dump:'RECALL',question:'QUIZ',cards:'FLASHCARDS',recap:'RECAP',html:'LEARN',warmup:'WARM-UP',flow:'FLOW',compare:'COMPARE',solve:'YOUR TURN'})[s.t]||'STEP';
-  const head='<div class="chips"><span class="chip r">'+chip+'</span><span class="chip">WORLD '+esc(q.world)+'  '+esc(q.title)+'</span></div>';
+  const where2=s.t==='question'?null:(s.src||((s.t==='mission'||s.t==='recap'||s.t==='warmup'||s.t==='cards')?null:q.src));
+  const head='<div class="chips"><span class="chip r">'+chip+'</span><span class="chip">WORLD '+esc(q.world)+'  '+esc(q.title)+'</span>'+(where2?'<span class="chip src" title="Where this comes from">'+srcText(where2)+'</span>':'')+'</div>';
   const R={mission:sMission,predict:sPredict,idea:sIdea,decode:sDecode,worked:sWorked,lab:sLab,figure:sFigure,dump:sDump,question:sQuestion,cards:sCards,recap:sRecap,html:sHtml,warmup:sWarmup,flow:sFlow,compare:sCompare,solve:sSolve}[s.t];
   if(!R){root.innerHTML='<div class="panel">Unknown step type: '+esc(s.t)+'</div>';return}
   root.innerHTML='<div class="panel">'+head+'<div id="body"></div></div>';
@@ -314,6 +329,7 @@ function sMission(b,q){
   const taught=[];q.steps.forEach(st=>(st.teaches||[]).forEach(id=>taught.push(id)));
   const needed=conceptNeeds(q);
   b.innerHTML=track(i)+'<h1>'+esc(q.title)+'</h1><p class="mut" style="margin:8px 0 14px">'+q.minutes+' min  |  '+q.steps.length+' steps  |  '+q.quiz.length+' quiz questions  |  go at your own pace</p>'+
+   (q.src?'<div class="co src"><small>WHERE THIS COMES FROM</small>'+srcText(q.src,true)+'</div>':'')+
    (q.question?'<div class="co ana"><small>THE QUESTION THIS QUEST ANSWERS</small>'+fmt(q.question)+'</div>':'')+
    (prev?'<div class="co say"><small>LAST TIME</small>'+fmt(q.previously||('You finished <b>'+esc(prev.title)+'</b>. This quest builds directly on it.'))+'</div>':'')+
    (needed.length?'<div class="co eg"><small>YOU WILL USE (FROM EARLIER)</small>'+chips(needed)+'</div>':'')+
@@ -445,7 +461,8 @@ function sDump(b,q,s){
 /* ---------- quiz ---------- */
 function quizHtml(Qn){
   const opts=shuffle([Qn.answer].concat(Qn.wrong||[]));Qn._o=opts;
-  return (Qn.tag?'<div class="chips"><span class="chip b">'+esc(Qn.tag)+'</span></div>':'')+'<h2 class="qq" style="font-family:var(--body)">'+fmt(Qn.q)+'</h2><div class="opts">'+opts.map((t,i)=>'<button class="opt" data-i="'+i+'"><span class="k">'+'ABCD'[i]+'</span><span>'+fmt(t)+'</span></button>').join('')+'</div><div class="fb"></div>';
+  const qs=qSrc(Qn);
+  return (Qn.tag||qs?'<div class="chips">'+(Qn.tag?'<span class="chip b">'+esc(Qn.tag)+'</span>':'')+(qs?'<span class="chip src" title="Where this comes from">'+srcText(qs)+'</span>':'')+'</div>':'')+'<h2 class="qq" style="font-family:var(--body)">'+fmt(Qn.q)+'</h2><div class="opts">'+opts.map((t,i)=>'<button class="opt" data-i="'+i+'"><span class="k">'+'ABCD'[i]+'</span><span>'+fmt(t)+'</span></button>').join('')+'</div><div class="fb"></div>';
 }
 function bindQuiz(box,Qn,onDone){
   box.innerHTML=quizHtml(Qn);const ai=Qn._o.indexOf(Qn.answer);let locked=false;
