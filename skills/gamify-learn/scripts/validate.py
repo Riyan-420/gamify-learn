@@ -15,8 +15,8 @@ import json, os, re, sys
 sys.path.insert(0, os.path.dirname(os.path.abspath(__file__)))
 import themes
 
-STEP_TYPES = {"predict", "idea", "decode", "worked", "lab", "figure", "dump", "quiz", "cards", "html", "flow", "compare", "solve"}
-PASSIVE = {"idea", "decode", "worked", "figure", "flow", "compare", "html"}
+STEP_TYPES = {"predict", "idea", "decode", "worked", "lab", "figure", "dump", "quiz", "cards", "html", "flow", "compare", "solve", "code"}
+PASSIVE = {"idea", "decode", "worked", "figure", "flow", "compare", "html", "code"}
 FORMULA_HINT = re.compile(r"(?<![A-Za-z])[A-Za-z]\w{0,3}\s*=\s*[^=\s]|\b\w\s*[\^/×·*]\s*\w|[√Σ∫≈≤≥]")
 ID = re.compile(r"[A-Za-z][A-Za-z0-9_]*")
 
@@ -36,6 +36,8 @@ def check(c, base="."):
     if not isinstance(qs, list) or not qs:
         E.append("'quests' must be a non-empty list")
         return E, W
+    slides = c.get("style") == "slides"   # a teaching deck: longer explanations, fewer quizzes
+    max_passive = int(c.get("max_passive", 7 if slides else 3))
     if not c.get("glossary"):
         W.append("no 'glossary': learners with no background will meet undefined words (add every term + symbol)")
 
@@ -135,12 +137,12 @@ def check(c, base="."):
                 ledger_used = True
                 uses.append((cid, qi, qpos[zid], f"{Z} 'concepts'"))
                 touch.setdefault(cid, []).append((qi, "quiz"))
-        if len(quiz) < 3:
-            W.append(f"{P}: only {len(quiz)} quiz questions (aim for 5-10: retrieval practice is the point)")
+        if len(quiz) < (2 if slides else 3):
+            W.append(f"{P}: only {len(quiz)} quiz questions (aim for {'3-5' if slides else '5-10'}: retrieval practice is the point)")
 
         cards = q.get("cards", [])
-        if len(cards) < 3:
-            W.append(f"{P}: {len(cards)} flashcards (aim for 5-10; they drive the spaced review)")
+        if len(cards) < (2 if slides else 3):
+            W.append(f"{P}: {len(cards)} flashcards (aim for {'2-4' if slides else '5-10'}; they drive the spaced review)")
         for j, cd in enumerate(cards, 1):
             if not (cd.get("front") or cd.get("f")) or not (cd.get("back") or cd.get("b")):
                 E.append(f"{P} card {j}: needs 'front' and 'back'")
@@ -151,23 +153,25 @@ def check(c, base="."):
 
         if not steps:
             E.append(f"{P}: no steps")
-        if len(steps) > 18:
+        if len(steps) > (24 if slides else 18):
             W.append(f"{P}: {len(steps)} steps; split into two quests (aim for 8-14 screens, ~12 minutes)")
+        if slides and len(quiz) > 5:
+            W.append(f"{P}: {len(quiz)} quiz questions in a slides course; this is a teaching deck, keep it to 5 or fewer and put the effort into the explanation")
         types = [s.get("type") for s in steps]
         has_decode = "decode" in types
         if steps and types[0] != "predict":
             W.append(f"{P}: start with a 'predict' step (guessing first improves memory)")
-        if "dump" not in types:
+        if "dump" not in types and not slides:
             W.append(f"{P}: no 'dump' step (a 60-second brain dump is cheap retrieval practice)")
-        visual = any(s.get("type") in ("lab", "figure", "flow", "compare") or s.get("viz") or s.get("src") or s.get("svg") for s in steps)
-        if not visual:
+        visual = any(s.get("type") in ("lab", "figure", "flow", "compare") or s.get("viz") or s.get("src") or s.get("images") or s.get("svg") for s in steps)
+        if not visual and not any(s.get("type") == "solve" for s in steps):
             W.append(f"{P}: nothing visual (add a lab, flow, compare, figure or an svg viz; the learner should SEE the idea)")
         # pacing: passive streaks lose attention; quiz placement counts as active
         run = 0
         for si, s in enumerate(steps, 1):
             run = run + 1 if s.get("type") in PASSIVE else 0
-            if run == 4:
-                W.append(f"{P} step {si}: four passive screens in a row; put a predict, quiz question, lab or solve in between (attention drops after ~3)")
+            if run == max_passive + 1:
+                W.append(f"{P} step {si}: {max_passive + 1} passive screens in a row; put a predict, quiz question, lab or solve in between (attention drops after ~{max_passive})")
         taught_here = 0
 
         for si, s in enumerate(steps, 1):
@@ -197,7 +201,7 @@ def check(c, base="."):
                 if len(ls) > 6: W.append(f"{S}: {len(ls)} lines; chunk it (max ~5 per screen)")
                 for l in ls:
                     if len(l) > 240: W.append(f"{S}: a line is {len(l)} characters; shorten (one thought per line)")
-                if not (s.get("analogy") or s.get("example")): W.append(f"{S}: add an 'analogy' or 'example' (abstract rule alone does not stick)")
+                if not (s.get("analogy") or s.get("example") or slides): W.append(f"{S}: add an 'analogy' or 'example' (abstract rule alone does not stick)")
                 if not has_decode and any(FORMULA_HINT.search(re.sub(r"<[^>]+>", "", l)) for l in ls):
                     W.append(f"{S}: looks like a formula in a plain 'idea' and this quest has no 'decode' step; every formula needs a decoder")
             elif t == "decode":
@@ -245,10 +249,22 @@ def check(c, base="."):
             elif t == "dump":
                 if not s.get("points"): E.append(f"{S}: dump needs 'points' (the checklist)")
             elif t == "figure":
-                if not (s.get("src") or s.get("svg")): E.append(f"{S}: figure needs 'src' or 'svg'")
-                if s.get("src") and not re.match(r"(data:|https?:)", s["src"]) and not os.path.isfile(os.path.join(base, s["src"])):
-                    E.append(f"{S}: image file not found: {s['src']}")
-                if not s.get("caption"): W.append(f"{S}: figure without a 'caption' (say what to look at)")
+                if not (s.get("src") or s.get("svg") or s.get("images")): E.append(f"{S}: figure needs 'src', 'images' or 'svg'")
+                if not (s.get("caption") or s.get("images") or (slides and s.get("lines"))): W.append(f"{S}: figure without a 'caption' (say what to look at)")
+            elif t == "code":
+                if not s.get("code"): E.append(f"{S}: code needs 'code' (the text of the snippet)")
+            if t in ("figure", "idea", "decode"):
+                imgs = list(s.get("images") or [])
+                if s.get("src"): imgs.append({"src": s["src"], "caption": s.get("caption")})
+                for im in imgs:
+                    p = im.get("src") if isinstance(im, dict) else None
+                    if not p:
+                        E.append(f"{S}: every entry of 'images' needs a 'src'")
+                        continue
+                    if not re.match(r"(data:|https?:)", p) and not os.path.isfile(os.path.join(base, p)):
+                        E.append(f"{S}: image file not found: {p}")
+                    if t == "figure" and s.get("images") and not (im.get("caption") or im.get("credit")):
+                        W.append(f"{S}: picture {p} has no 'caption' (say what to look at)")
             elif t == "quiz":
                 for i in s.get("ids", []):
                     if i not in qids: E.append(f"{S}: quiz id '{i}' not in this quest's quiz")
@@ -268,8 +284,9 @@ def check(c, base="."):
     last_q = len(qs) - 1
     for cid, (iq, ip) in intro.items():
         tp = touch.get(cid, [])
-        if len(tp) < 3:
-            W.append(f"concept '{cid}': only {len(tp)} relearning touchpoints after it is taught (aim for 3+: quiz questions, cards, worked/lab/solve steps that 'need' it)")
+        need_tp = 2 if slides else 3
+        if len(tp) < need_tp:
+            W.append(f"concept '{cid}': only {len(tp)} relearning touchpoints after it is taught (aim for {need_tp}+: quiz questions, cards, worked/lab/solve steps that 'need' it)")
         if iq < last_q and not any(q2 > iq for q2, _ in tp):
             W.append(f"concept '{cid}' (taught in quest {iq + 1}) never comes back in a later quest; spaced relearning across quests needs at least one later touchpoint")
     if not any_solve:

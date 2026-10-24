@@ -6,7 +6,7 @@ const TH=window.__THEME||{};   /* optional theme pack (themes/<name>/theme.js): 
 const PL=Object.assign({grid:'#c4e8ff',axis:'#40527a',ink:'#12213f',series:['#e63946','#1f7fd1','#12213f'],at:'#e63946',bw:3,mw:3,lw:4,font:'monospace',conf:['#e63946','#2a9df4','#ffd23f','#fff','#12213f']},TH.palette||{});
 const SLUG=(D.slug||D.title||'course').toString().toLowerCase().replace(/[^a-z0-9]+/g,'-').slice(0,40);
 const KEY='gamify_learn_'+SLUG+'_v1';
-let S={xp:0,streak:0,last:'',ans:{},cards:{},done:{},dumps:{},hooks:{},badges:{},calm:false,sfx:false,tmin:D.focus_minutes||15,combo:0,best:0,raids:0,seen:false,solves:{},unlockAll:false};
+let S={xp:0,streak:0,last:'',ans:{},cards:{},done:{},dumps:{},hooks:{},badges:{},calm:false,sfx:false,tmin:D.focus_minutes||15,combo:0,best:0,raids:0,seen:false,solves:{},unlockAll:false,pos:{},rv:{},wu:{},cd:{},swipe:true,lastq:null};
 try{Object.assign(S,JSON.parse(localStorage.getItem(KEY)||'{}'))}catch(e){}
 const save=()=>{try{localStorage.setItem(KEY,JSON.stringify(S))}catch(e){}};
 const $=(el,q)=>el.querySelector(q), $$=(el,q)=>[...el.querySelectorAll(q)];
@@ -193,6 +193,7 @@ function menu(){
   const o=overlay('<div class="panel menu"><h2>Settings</h2>'+
    '<div class="row2"><span>Sound effects (8-bit beeps)</span><button class="btn sm2 ghost" data-m="sfx">'+(S.sfx?'ON':'OFF')+'</button></div>'+
    '<div class="row2"><span>Calm mode (no motion, no sound)</span><button class="btn sm2 ghost" data-m="calm">'+(S.calm?'ON':'OFF')+'</button></div>'+
+   '<div class="row2"><span>Swipe sideways to go next / back (turn off if it ever fires by mistake)</span><button class="btn sm2 ghost" data-m="swipe">'+(S.swipe?'ON':'OFF')+'</button></div>'+
    '<div class="row2"><span>Focus block length</span><span><button class="btn sm2 ghost" data-m="t10">10</button> <button class="btn sm2 ghost" data-m="t15">15</button> <button class="btn sm2 ghost" data-m="t25">25</button> min</span></div>'+
    '<div class="row2"><span>Unlock every quest (skips the one-direction path)</span><button class="btn sm2 ghost" data-m="unlock">'+(S.unlockAll?'ON':'OFF')+'</button></div>'+
    '<div class="row2"><span>Save file (progress lives in this browser)</span><span><button class="btn sm2 blue" data-m="exp">EXPORT</button> <button class="btn sm2 ghost" data-m="imp">IMPORT</button></span></div>'+
@@ -202,6 +203,7 @@ function menu(){
   o.addEventListener('click',e=>{const b=e.target.closest('[data-m]');if(!b)return;const m=b.dataset.m;
     if(m==='sfx'){S.sfx=!S.sfx;save();b.textContent=S.sfx?'ON':'OFF';SND.ok()}
     else if(m==='calm'){S.calm=!S.calm;document.body.classList.toggle('calm',S.calm);save();b.textContent=S.calm?'ON':'OFF'}
+    else if(m==='swipe'){S.swipe=!S.swipe;save();b.textContent=S.swipe?'ON':'OFF'}
     else if(/^t\d+$/.test(m)){S.tmin=+m.slice(1);tLeft=S.tmin*60;save();renderHud();toast('Focus block: '+S.tmin+' min')}
     else if(m==='exp'){const blob=new Blob([JSON.stringify({key:KEY,state:S},null,1)],{type:'application/json'});const a=document.createElement('a');a.href=URL.createObjectURL(blob);a.download=SLUG+'-progress.json';a.click()}
     else if(m==='imp'){const f=document.createElement('input');f.type='file';f.accept='.json';f.onchange=()=>{const r=new FileReader();r.onload=()=>{try{const j=JSON.parse(r.result);Object.assign(S,j.state||j);save();location.reload()}catch(err){toast('That file is not a progress file')}};r.readAsText(f.files[0])};f.click()}
@@ -224,7 +226,11 @@ function about(){
 
 /* ---------- routing ---------- */
 let V={v:'title'};
-function go(v){if(v.v==='quest'&&isLocked(v.q)){toast('Locked: finish the previous quest first. One direction keeps the story clear.');v={v:'map'}}V=v;if(v.v==='quest'){S.seen=true}render();window.scrollTo(0,0);try{history.replaceState(null,'','#'+(v.v==='quest'?'q'+(v.q+1)+'/'+(v.i+1):v.v))}catch(e){}}
+/* v.back = arrived by BACK (show the whole page, nothing to re-reveal). The place in each quest is saved so START / CONTINUE on the map can resume. */
+function go(v){if(v.v==='quest'&&isLocked(v.q)){toast('Locked: finish the previous quest first. One direction keeps the story clear.');v={v:'map'}}V=v;if(v.v==='quest'){S.seen=true;if(!FORCE){S.pos[QUESTS[v.q].id]=v.i;S.lastq={q:v.q,i:v.i};save()}}render();window.scrollTo(0,0);try{history.replaceState(null,'','#'+(v.v==='quest'?'q'+(v.q+1)+'/'+(v.i+1):v.v))}catch(e){}}
+/* where a quest would resume: saved step, or the start when it is finished (the recap is the last step) or never begun */
+function resumeAt(q){const i=S.pos[q.id]||0;return(i>0&&i<q.steps.length-1)?i:0}
+const isStarted=q=>resumeAt(q)>0;
 const qIdx=id=>QUESTS.findIndex(q=>q.id===id);
 function questDone(q){return !!S.done[q.id]}
 function qStats(q){const ids=q.quiz.map(x=>x.id);const tried=ids.filter(i=>S.ans[i]).length;const first=ids.filter(i=>S.ans[i]&&S.ans[i].first).length;return{tried,first,n:ids.length,pc:ids.length?Math.round(100*tried/ids.length):0,acc:tried?first/ids.length:0}}
@@ -241,11 +247,12 @@ function render(){
 /* ---------- title ---------- */
 function rTitle(){
   const started=S.seen||S.xp>0;
+  const lq=S.lastq&&QUESTS[S.lastq.q],resume=lq&&!S.done[lq.id]&&isStarted(lq)?{q:S.lastq.q,i:resumeAt(lq)}:null;
   root.innerHTML='<div class="panel title"><div class="sprites">'+icon('hero',8)+icon('star',8)+icon('boss',6)+'</div>'+
    '<div class="logo">'+esc(D.title)+'</div><div class="sub">'+fmt(D.subtitle||'A game-style study run. Short quests, instant feedback, spaced review.')+'</div>'+
-   '<div class="row" style="justify-content:center"><button class="btn big" data-a="start">'+(started?'CONTINUE':'START GAME')+'</button><button class="btn ghost" data-a="about">HOW IT WORKS</button></div>'+
+   '<div class="row" style="justify-content:center"><button class="btn big" data-a="start">'+(resume?'CONTINUE: <span class="ut">Quest '+(resume.q+1)+', step '+(resume.i+1)+'</span>':started?'CONTINUE':'START GAME')+'</button>'+(resume?'<button class="btn ghost" data-a="map">WORLD MAP</button>':'')+'<button class="btn ghost" data-a="about">HOW IT WORKS</button></div>'+
    '<div class="press">'+(started?'WELCOME BACK':'PRESS START')+'</div></div>';
-  root.onclick=e=>{const a=e.target.closest('[data-a]');if(!a)return;SND.click();if(a.dataset.a==='start')go({v:'map'});else about()};
+  root.onclick=e=>{const a=e.target.closest('[data-a]');if(!a)return;SND.click();const k=a.dataset.a;if(k==='start')go(resume?{v:'quest',q:resume.q,i:resume.i}:{v:'map'});else if(k==='map')go({v:'map'});else about()};
 }
 
 /* ---------- map ---------- */
@@ -253,7 +260,7 @@ function nextBest(){
   const due=dueIds().length;
   if(due)return{t:'REVIEW '+due+' CARD'+(due>1?'S':'')+' (3 MIN)',go:{v:'review'}};
   const nq=QUESTS.find(q=>!questDone(q));
-  if(nq){const started=nq.steps.some(()=>false)||qStats(nq).tried>0;return{t:(started?'CONTINUE: ':'START: ')+nq.title,go:{v:'quest',q:qIdx(nq.id),i:0},q:nq}}
+  if(nq){const started=isStarted(nq);return{t:(started?'CONTINUE: ':'START: ')+nq.title,go:{v:'quest',q:qIdx(nq.id),i:resumeAt(nq)},q:nq}}
   return{t:'BOSS RAID: TEST EVERYTHING',go:{v:'raid'}};
 }
 function solveLoc(id){const x=SOLVE[id];return x?{v:'quest',q:qIdx(x.quest),i:x.step}:{v:'map'}}
@@ -262,7 +269,9 @@ function rMap(){
   const tot=Object.keys(S.ans).length,right=Object.values(S.ans).filter(a=>a.last).length;
   const sids=Object.keys(SOLVE),sdone=sids.filter(id=>S.solves[id]&&S.solves[id].r!=='no').length,redo=sids.filter(id=>S.solves[id]&&S.solves[id].r==='no');
   const cards=QUESTS.map((q,i)=>{const st=qStats(q),lock=isLocked(i);const stars=questDone(q)?(st.n&&st.first===st.n?3:st.acc>=.7?2:1):0;
-    return '<div class="qc'+(questDone(q)?' done':'')+(lock?' locked':'')+(nb.q&&nb.q.id===q.id?' rec':'')+'" data-q="'+i+'" tabindex="0" role="button"><span class="w">WORLD '+esc(q.world)+(lock?'  LOCKED':'')+'</span>'+(q.source?'<div class="src">'+srcText(q.source)+'</div>':'')+'<h3>'+esc(q.title)+'</h3>'+(q.question?'<div class="qs">? '+fmt(q.question)+'</div>':'')+'<div class="stars">'+[1,2,3].map(k=>icon('star',3).replace('<svg','<svg style="opacity:'+(k<=stars?1:.2)+'"')).join('')+'</div><div class="m">'+q.minutes+' min  |  '+q.quiz.length+' quiz Qs</div><div class="pb"><i style="width:'+st.pc+'%"></i></div></div>'}).join('');
+    const at=resumeAt(q),begun=isStarted(q),n=q.steps.length;
+    const btns=lock?'':(begun?'<button class="btn sm2" data-go="'+i+'" data-at="'+at+'">CONTINUE  <span class="ut">step '+(at+1)+' of '+n+'</span></button><button class="btn ghost sm2" data-go="'+i+'" data-at="0">START OVER</button>':'<button class="btn sm2" data-go="'+i+'" data-at="0">'+(questDone(q)?'REPLAY':'START')+'</button>');
+    return '<div class="qc'+(questDone(q)?' done':'')+(lock?' locked':'')+(begun&&!questDone(q)?' begun':'')+(nb.q&&nb.q.id===q.id?' rec':'')+'" data-q="'+i+'"><span class="w">WORLD '+esc(q.world)+(lock?'  LOCKED':'')+'</span>'+(q.source?'<div class="src">'+srcText(q.source)+'</div>':'')+'<h3>'+esc(q.title)+'</h3>'+(q.question?'<div class="qs">? '+fmt(q.question)+'</div>':'')+'<div class="stars">'+[1,2,3].map(k=>icon('star',3).replace('<svg','<svg style="opacity:'+(k<=stars?1:.2)+'"')).join('')+'</div><div class="m">'+q.minutes+' min  |  '+n+' screens  |  '+q.quiz.length+' quiz Qs</div><div class="pb"><i style="width:'+(begun&&!questDone(q)?Math.round(100*at/(n-1)):questDone(q)?100:0)+'%"></i></div><div class="qbtns">'+btns+'</div></div>'}).join('');
   const bd=Object.keys(BADGES).map(k=>'<div class="bd'+(S.badges[k]?'':' lock')+'">'+icon(BADGES[k][0],3)+'<span><b>'+BADGES[k][1]+'</b><br>'+BADGES[k][2]+'</span></div>').join('');
   const tree=CONLIST.length?'<div class="panel"><h2>Skill line</h2><p class="mut sm" style="margin-bottom:10px">Every concept, in the order you learn it. Pips fill when you answer questions about it correctly across different quests: that is the relearning.</p><div class="tree">'+CONLIST.map(c=>{const mp=mastery(c.id);return '<span class="cn m'+mp+'" title="Taught in quest '+(c.quest+1)+'"><b>'+esc(c.name)+'</b><span class="pips">'+[0,1,2].map(k=>'<i class="pp'+(k<mp?' on':'')+'"></i>').join('')+'</span></span>'}).join('')+'</div></div>':'';
   root.innerHTML='<div class="panel"><div class="chips"><span class="chip r">WORLD MAP</span></div><h1>'+esc(D.title)+'</h1><p class="mut" style="margin-top:8px">'+fmt(D.subtitle||'')+'</p>'+track(-1)+
@@ -271,10 +280,11 @@ function rMap(){
    '<div class="todo"><span>Before you start (optional):</span><label><input type="checkbox">phone out of reach</label><label><input type="checkbox">water</label><label><input type="checkbox">60 s of movement</label><label><input type="checkbox">timer on (T)</label></div></div>'+
    '<div class="qgrid">'+cards+'</div>'+tree+
    '<div class="panel" style="margin-top:34px"><h2>Badges</h2><div class="badges">'+bd+'</div></div>';
-  root.onclick=e=>{const q=e.target.closest('.qc');if(q){go({v:'quest',q:+q.dataset.q,i:0});return}
+  /* only the buttons open a quest (a stray tap or scroll on a card does nothing) */
+  root.onclick=e=>{const g=e.target.closest('[data-go]');if(g){SND.click();go({v:'quest',q:+g.dataset.go,i:+g.dataset.at});return}
     const a=e.target.closest('[data-a]');if(!a)return;SND.click();const k=a.dataset.a;
     if(k==='nb')go(nb.go);else if(k==='redo')go(solveLoc(redo[0]));else go({v:k})};
-  root.onkeydown=e=>{if(e.key==='Enter'&&e.target.classList.contains('qc'))e.target.click()};
+  root.onkeydown=null;
 }
 
 /* ---------- quest runner ---------- */
@@ -282,14 +292,18 @@ let gated=false,reveals=[],shown=0;
 function rQuest(){
   const q=QUESTS[V.q],s=q.steps[V.i];where='Q'+q.n+'  '+(V.i+1)+'/'+q.steps.length;
   gated=false;
-  const chip=({mission:'MISSION',predict:'PREDICT',idea:'LEARN',decode:'DECODER',worked:'WORKED EXAMPLE',lab:'LAB',figure:'FIGURE',dump:'RECALL',question:'QUIZ',cards:'FLASHCARDS',recap:'RECAP',html:'LEARN',warmup:'WARM-UP',flow:'FLOW',compare:'COMPARE',solve:'YOUR TURN'})[s.t]||'STEP';
+  const chip=({mission:'MISSION',predict:'PREDICT',idea:'LEARN',decode:'DECODER',worked:'WORKED EXAMPLE',lab:'LAB',figure:'FIGURE',dump:'RECALL',question:'QUIZ',cards:'FLASHCARDS',recap:'RECAP',html:'LEARN',warmup:'WARM-UP',flow:'FLOW',compare:'COMPARE',solve:'YOUR TURN',code:'CODE'})[s.t]||'STEP';
   const where2=s.t==='question'?null:(s.source||((s.t==='mission'||s.t==='recap'||s.t==='warmup'||s.t==='cards')?null:q.source));
   const head='<div class="chips"><span class="chip r">'+chip+'</span><span class="chip">WORLD '+esc(q.world)+'  '+esc(q.title)+'</span>'+(where2?'<span class="chip src" title="Where this comes from">'+srcText(where2)+'</span>':'')+'</div>';
-  const R={mission:sMission,predict:sPredict,idea:sIdea,decode:sDecode,worked:sWorked,lab:sLab,figure:sFigure,dump:sDump,question:sQuestion,cards:sCards,recap:sRecap,html:sHtml,warmup:sWarmup,flow:sFlow,compare:sCompare,solve:sSolve}[s.t];
+  const R={mission:sMission,predict:sPredict,idea:sIdea,decode:sDecode,worked:sWorked,lab:sLab,figure:sFigure,dump:sDump,question:sQuestion,cards:sCards,recap:sRecap,html:sHtml,warmup:sWarmup,flow:sFlow,compare:sCompare,solve:sSolve,code:sCode}[s.t];
   if(!R){root.innerHTML='<div class="panel">Unknown step type: '+esc(s.t)+'</div>';return}
   root.innerHTML='<div class="panel">'+head+'<div id="body"></div></div>';
   const body=$(root,'#body');R(body,q,s);
-  reveals=collect(body);shown=0;navDraw(q);
+  reveals=collect(body);shown=0;
+  /* coming BACK shows the whole page; coming forward or resuming restores what was already revealed (no re-pressing NEXT) */
+  const seen=Math.min(reveals.length,V.back?reveals.length:(S.rv[q.id+':'+V.i]||0));
+  for(let k=0;k<seen;k++)turnOn(reveals[k],true);shown=seen;if(V.back)S.rv[q.id+':'+V.i]=reveals.length;
+  navDraw(q);
   if(/[?&]reveal/.test(location.search)){revealAll();navDraw(q);if(s.t==='question'&&body._pick)body._pick(body._correct)}  /* ?reveal: show everything (screenshots, printing) */
 }
 function navDraw(q){
@@ -303,13 +317,14 @@ function navDraw(q){
 navEl.addEventListener('click',e=>{const b=e.target.closest('[data-n]');if(!b)return;b.dataset.n==='next'?next():prev()});
 function next(){
   if(V.v!=='quest'||gated)return;
-  if(shown<reveals.length){turnOn(reveals[shown++]);navDraw();SND.click();const r=reveals[shown-1];const tg=r.ownerSVGElement||r;try{tg.scrollIntoView({block:'nearest',behavior:S.calm?'auto':'smooth'})}catch(e){}return}
+  if(shown<reveals.length){turnOn(reveals[shown++]);S.rv[QUESTS[V.q].id+':'+V.i]=Math.max(shown,S.rv[QUESTS[V.q].id+':'+V.i]||0);save();navDraw();SND.click();const r=reveals[shown-1];const tg=r.ownerSVGElement||r;try{tg.scrollIntoView({block:'nearest',behavior:S.calm?'auto':'smooth'})}catch(e){}return}
   const q=QUESTS[V.q];if(V.i<q.steps.length-1)go({v:'quest',q:V.q,i:V.i+1});else go({v:'map'});
 }
-function prev(){if(V.v!=='quest')return;const q=QUESTS[V.q];if(V.i>0)go({v:'quest',q:V.q,i:V.i-1})}
+function prev(){if(V.v!=='quest')return;const q=QUESTS[V.q];if(V.i>0)go({v:'quest',q:V.q,i:V.i-1,back:true})}
+/* gate(on): hold NEXT until the step is done, but only the first time; a step already completed never blocks again */
 function gate(on){gated=on;if(V.v==='quest')navDraw()}
-function turnOn(el){el.classList.add('on');(el._with||[]).forEach(x=>x.classList.add('on'))}
-function revealAll(){reveals.forEach(turnOn);shown=reveals.length}
+function turnOn(el,quiet){el.classList.add('on');if(quiet)el.classList.add('nr');(el._with||[]).forEach(x=>{x.classList.add('on');if(quiet)x.classList.add('nr')})}
+function revealAll(){reveals.forEach(x=>turnOn(x));shown=reveals.length}
 /* every .rv block is one reveal; inside an illustration, elements marked data-s="1","2",... build up one stage per press */
 function collect(root){const out=[];$$(root,'.rv').forEach(r=>{out.push(r);const L=$$(r,'svg [data-s]');if(!L.length)return;const by={};L.forEach(l=>{(by[l.getAttribute('data-s')]=by[l.getAttribute('data-s')]||[]).push(l)});Object.keys(by).map(Number).sort((a,b)=>a-b).forEach(k=>{const g=by[k];g[0]._with=g.slice(1);out.push(g[0])})});return out}
 
@@ -320,10 +335,19 @@ function vizHtml(v){
   if(typeof v==='string')return '<div class="vizbox rv">'+v+'</div>';
   return '';
 }
+/* one picture (src + caption + credit) or several (images:[{src,caption,credit}]), each revealed in turn; tap a picture to enlarge it */
 function figHtml(s){
-  if(!s.src)return '';
-  return '<figure class="rv"><img src="'+s.src+'" alt="'+esc(s.caption||s.title||'figure')+'">'+(s.caption?'<figcaption>'+fmt(s.caption)+(s.credit?' <span class="mut">('+esc(s.credit)+')</span>':'')+'</figcaption>':'')+'</figure>';
+  const list=(s.images&&s.images.length)?s.images:(s.src?[s]:[]);
+  return list.map(f=>'<figure class="rv"><img src="'+f.src+'" alt="'+esc(f.alt||f.caption||s.title||'figure')+'" data-zoom loading="lazy">'+((f.caption||f.credit)?'<figcaption>'+fmt(f.caption||'')+(f.credit?' <span class="mut credit">('+esc(f.credit)+')</span>':'')+'</figcaption>':'')+'<span class="zhint">tap picture to enlarge</span></figure>').join('');
 }
+const codeHtml=s=>s.code?'<pre class="codeblock rv" tabindex="0" data-noswipe><code>'+esc(s.code)+'</code></pre>':'';
+function sCode(b,q,s){b.innerHTML='<h2>'+fmt(s.title)+'</h2>'+li(s.lines)+codeHtml(s)+co('keep','KEEP THIS',s.keep)+co('trap','TRAP',s.trap)}
+document.addEventListener('click',e=>{
+  if(V.v!=='quest'||topOverlay())return;
+  const im=e.target.closest('img[data-zoom]'),sv=!im&&e.target.closest('.vizbox svg:not(.plot)');
+  if(im){const o=overlay('<div class="zoombox"><img src="'+im.currentSrc+'" alt="" data-x><p class="mut sm">Pinch to zoom, drag to look around. Tap the picture, outside it, or press Esc to close.</p><button class="btn sm2" data-x>CLOSE</button></div>');o.classList.add('zoomov')}
+  else if(sv&&!sv.closest('.lab')){const o=overlay('<div class="zoombox zsvg" data-x>'+sv.outerHTML+'<p class="mut sm">Pinch to zoom. Tap anywhere or press Esc to close.</p><button class="btn sm2" data-x>CLOSE</button></div>');o.classList.add('zoomov')}
+});
 function sMission(b,q){
   const i=q.n-1,prev=QUESTS[i-1];
   const taught=[];q.steps.forEach(st=>(st.teaches||[]).forEach(id=>taught.push(id)));
@@ -342,12 +366,13 @@ function sWarmup(b,q){
   QUESTS.slice(0,qi).forEach(p=>p.quiz.forEach(x=>pool.push(x)));
   const wp=[];pool.forEach(x=>{const a=S.ans[x.id];let k=a?(a.last===false?4:1):2;if((x.concepts||[]).some(c=>need.has(c)))k+=3;for(let j=0;j<k;j++)wp.push(x.id)});
   const pick=[];shuffle(wp).forEach(id=>{if(pick.length<3&&!pick.includes(id))pick.push(id)});
-  gate(true);
+  if(V.back&&S.wu[q.id]){b.innerHTML='<h2>Warm-up</h2><div class="co keep" style="display:block"><small>WARM-UP DONE</small>You already did this one. Press NEXT.</div>';gate(false);return}
+  gate(!S.wu[q.id]);
   b.innerHTML='<h2>Warm-up: pull it from memory</h2><p class="mut">Three quick questions from earlier quests, picked because this quest leans on them. Remembering before you learn keeps old ideas alive. Wrong answers are fine here.</p><div id="wu"></div>';
   let i=0,ok=0;
   (function draw(){
     const box=$(b,'#wu');
-    if(i>=pick.length){box.innerHTML='<div class="co keep" style="display:block"><small>WARM-UP DONE</small>'+ok+' of '+pick.length+' right. The new idea builds on exactly these.</div>';addXP(3+ok,'warm-up');gate(false);return}
+    if(i>=pick.length){box.innerHTML='<div class="co keep" style="display:block"><small>WARM-UP DONE</small>'+ok+' of '+pick.length+' right. The new idea builds on exactly these.</div>';addXP(3+ok,'warm-up');S.wu[q.id]=1;save();gate(false);return}
     box.innerHTML='<p class="chip" style="display:inline-block;margin-bottom:10px">'+(i+1)+' / '+pick.length+'</p><div id="wq"></div>';
     bindQuiz($(box,'#wq'),BANK[pick[i]],good=>{if(good)ok++;i++;draw()});
   })();
@@ -361,7 +386,7 @@ function sCompare(b,q,s){
   b.innerHTML='<h2>'+fmt(s.title)+'</h2>'+(s.intro?'<p>'+fmt(s.intro)+'</p>':'')+'<div class="cmp"><div class="crow chd"><span></span><span>'+fmt(H[0])+'</span><span>'+fmt(H[1])+'</span></div>'+(s.rows||[]).map(r=>'<div class="crow rv"><span class="cl">'+fmt(r[0])+'</span><span>'+fmt(r[1])+'</span><span>'+fmt(r[2])+'</span></div>').join('')+'</div>'+co('keep','KEEP THIS',s.keep)+co('trap','TRAP',s.trap);
 }
 function sSolve(b,q,s){
-  const id=q.id+'-s'+V.i,Hs=s.hints||[];let used=0;gate(true);
+  const id=q.id+'-s'+V.i,Hs=s.hints||[];let used=0;gate(!S.solves[id]);
   b.innerHTML='<h2>'+fmt(s.title||'Your turn')+'</h2><div class="prob">'+fmt(s.problem)+'</div><p class="mut">Work it out on paper first. Hints come one at a time and using them is fine: that is how the skill sticks.</p><div id="hs"></div><div class="row"><button class="btn ghost sm2" data-k="hint">HINT ('+Hs.length+' LEFT)</button><button class="btn blue sm2" data-k="show">SHOW SOLUTION</button></div><div id="sol" style="display:none"></div>';
   const hb=$(b,'[data-k=hint]');if(!Hs.length)hb.style.display='none';
   hb.onclick=()=>{if(used<Hs.length){$(b,'#hs').insertAdjacentHTML('beforeend','<div class="co say"><small>HINT '+(used+1)+'</small>'+fmt(Hs[used])+'</div>');used++;hb.textContent='HINT ('+(Hs.length-used)+' LEFT)';if(used>=Hs.length)hb.disabled=true}};
@@ -377,10 +402,10 @@ function sPredict(b,q,s){
   $(b,'[data-k=lock]').onclick=e=>{e.target.style.display='none';$(b,'#pa').style.display='block';if(!S.hooks[id]){S.hooks[id]=1;addXP(3,'predicted first')}save()};
 }
 function sIdea(b,q,s){
-  b.innerHTML='<h2>'+fmt(s.title)+'</h2>'+li(s.lines)+vizHtml(s.viz)+figHtml(s)+co('ana','THINK OF IT AS',s.analogy)+co('eg','EXAMPLE',s.example)+co('keep','KEEP THIS',s.keep)+co('trap','TRAP',s.trap);
+  b.innerHTML='<h2>'+fmt(s.title)+'</h2>'+li(s.lines)+vizHtml(s.viz)+figHtml(s)+codeHtml(s)+co('ana','THINK OF IT AS',s.analogy)+co('eg','EXAMPLE',s.example)+co('keep','KEEP THIS',s.keep)+co('trap','TRAP',s.trap);
 }
 function sHtml(b,q,s){b.innerHTML=(s.title?'<h2>'+fmt(s.title)+'</h2>':'')+'<div class="rv">'+s.html+'</div>'}
-function sFigure(b,q,s){b.innerHTML='<h2>'+fmt(s.title||'')+'</h2>'+li(s.lines)+(s.svg?'<div class="vizbox rv">'+s.svg+'</div>':'')+figHtml(s)+co('keep','KEEP THIS',s.keep)}
+function sFigure(b,q,s){b.innerHTML='<h2>'+fmt(s.title||'')+'</h2>'+li(s.lines)+(s.svg?'<div class="vizbox rv">'+s.svg+'</div>':'')+figHtml(s)+co('keep','KEEP THIS',s.keep)+co('trap','TRAP',s.trap)}
 function sDecode(b,q,s){
   b.innerHTML='<h2>'+fmt(s.title)+'</h2>'+(s.intro?'<p>'+fmt(s.intro)+'</p>':'')+'<div class="fbox">'+fmtF(s.formula)+'</div>'+(s.read?'<p class="mut">Read it aloud: '+fmt(s.read)+'</p>':'')+
    '<div class="syms">'+(s.parts||[]).map((p,i)=>'<div class="sy rv" style="--c:var(--k'+(i%6)+')"><div class="g">'+fmtF(p.sym)+'</div><div><div class="nm">'+fmt(p.name)+'</div><div>'+fmt(p.plain)+'</div>'+(p.effect?'<div class="ef">'+fmt(p.effect)+'</div>':'')+'</div></div>').join('')+'</div>'+
@@ -478,7 +503,11 @@ function bindQuiz(box,Qn,onDone){
     if(onDone){$(box,'[data-k=nx]').onclick=()=>onDone(ok)}else gate(false);
   });
 }
-function sQuestion(b,q,s){const Qn=BANK[s.id];gate(true);bindQuiz(b,Qn,null)}
+/* a question already answered once never blocks NEXT again; arriving by BACK shows the answer and the explanation instead of asking again */
+function viewQuiz(box,Qn){box.innerHTML=quizHtml(Qn);const ai=Qn._o.indexOf(Qn.answer),a=S.ans[Qn.id];
+  $$(box,'.opt').forEach((x,k)=>{x.disabled=true;if(k===ai)x.classList.add('ok')});
+  $(box,'.fb').innerHTML='<div class="verdict ok">ANSWER: '+'ABCD'[ai]+'</div><div class="why">'+fmt(Qn.why||'')+'</div><p class="mut sm">You answered this one already'+(a&&a.last===false?' (last time you missed it)':'')+'. Press NEXT to carry on.</p>'}
+function sQuestion(b,q,s){const Qn=BANK[s.id],done=!!S.ans[Qn.id];if(V.back&&done){viewQuiz(b,Qn);gate(false);return}gate(!done);bindQuiz(b,Qn,null)}
 
 /* ---------- flashcards + spaced review ---------- */
 const IV=[0,1,2,4,7,14];
@@ -488,7 +517,7 @@ function cardRunner(el,ids,opts){
   function draw(){
     if(i>=list.length){
       el.innerHTML='<div class="big2">'+hit+' / '+list.length+'</div><p>'+(opts.review?'Review done. Cards you got right come back later: gaps grow 1, 2, 4, 7, 14 days.':'Cards saved. They show up in your daily review when due.')+'</p><button class="btn" data-k="c">CONTINUE</button>';
-      $(el,'[data-k=c]').onclick=()=>opts.review?go({v:'map'}):(gate(false),next());return;
+      $(el,'[data-k=c]').onclick=()=>opts.review?go({v:'map'}):(gate(false),opts.done&&opts.done(),next());return;
     }
     const id=list[i],c=CARDS[id];
     el.innerHTML='<p class="mut sm">CARD '+(i+1)+' / '+list.length+'. Click the card to flip.</p><div class="fc"><div class="fcard"><div>'+fmt(c.f)+'</div><div class="a">'+fmt(c.b)+'</div><div class="tip">CLICK TO FLIP</div></div></div><div class="row" id="rt" style="visibility:hidden"><button class="btn" data-k="ag">AGAIN</button><button class="btn good" data-k="gt">GOT IT</button><span class="mut sm">Honest rating = better schedule.</span></div>';
@@ -498,7 +527,7 @@ function cardRunner(el,ids,opts){
   }
   draw();
 }
-function sCards(b,q){gate(true);b.innerHTML='<h2>Flip each card. Be honest.</h2><div id="cr"></div>';cardRunner($(b,'#cr'),q.cardsList)}
+function sCards(b,q){gate(!S.cd[q.id]);b.innerHTML='<h2>Flip each card. Be honest.</h2><div id="cr"></div>';cardRunner($(b,'#cr'),q.cardsList,{done:()=>{S.cd[q.id]=1;save()}})}
 function rReview(){
   const d=dueIds(),total=Object.keys(S.cards).filter(id=>CARDS[id]).length;
   root.onclick=null;
@@ -589,8 +618,32 @@ addEventListener('keydown',e=>{
   if(['ArrowRight','PageDown'].includes(k)||((k===' '||k==='Enter')&&!['BUTTON'].includes(tg.tagName))){e.preventDefault();next()}
   else if(['ArrowLeft','PageUp'].includes(k)){e.preventDefault();prev()}
 });
-let tx=null;addEventListener('touchstart',e=>{tx=e.touches[0].clientX},{passive:true});
-addEventListener('touchend',e=>{if(tx===null||V.v!=='quest')return;const d=e.changedTouches[0].clientX-tx;if(Math.abs(d)>90&&!e.target.closest('input,textarea,.lab'))(d<0?next():prev());tx=null});
+/* Swipe = next / back. It must never fire by accident, so a swipe counts only when it is one clearly horizontal, deliberate finger:
+   - not a pinch: a second finger at any moment cancels the gesture (pinching to zoom used to flip the slide)
+   - not while the page is zoomed in (panning around a zoomed page is not a swipe)
+   - not when it starts on something that scrolls sideways (code blocks, formulas, tables, plots, sliders, buttons, overlays)
+   - not from the very edge of the screen (the phone's own back gesture lives there)
+   - long enough (130 px), mostly horizontal (dx > 2.2 dy) and quick (under 700 ms)
+   Turn it off completely in Menu if you still hit it by mistake. */
+const SWIPE_STOP='input,textarea,select,button,a,pre,code,.fbox,.lab,.plot,.ctl,.track,.fcard,.opts,.gl-list,.ov,[data-noswipe]';
+function sideways(el){for(let n=el;n&&n!==document.body&&n.nodeType===1;n=n.parentElement){
+  if(n.matches(SWIPE_STOP))return true;
+  if(n.scrollWidth>n.clientWidth+2){const ox=getComputedStyle(n).overflowX;if(ox==='auto'||ox==='scroll')return true}}return false}
+const zoomed=()=>!!(window.visualViewport&&window.visualViewport.scale>1.02);
+let tg=null;
+addEventListener('touchstart',e=>{
+  if(e.touches.length>1){tg=null;return}
+  const t=e.touches[0];
+  tg=(!S.swipe||V.v!=='quest'||zoomed()||t.clientX<28||t.clientX>innerWidth-28||sideways(e.target))?null:{x:t.clientX,y:t.clientY,t:Date.now()};
+},{passive:true});
+addEventListener('touchmove',e=>{if(tg&&(e.touches.length>1||zoomed()))tg=null},{passive:true});
+addEventListener('touchcancel',()=>{tg=null},{passive:true});
+addEventListener('touchend',e=>{
+  if(!tg)return;const g=tg;tg=null;
+  if(e.touches.length||V.v!=='quest'||zoomed()||topOverlay())return;
+  const t=e.changedTouches[0],dx=t.clientX-g.x,dy=t.clientY-g.y;
+  if(Math.abs(dx)>=130&&Math.abs(dx)>2.2*Math.abs(dy)&&Date.now()-g.t<700)(dx<0?next():prev());
+});
 
 /* ---------- selftest: render every step, check for exceptions ---------- */
 function selftest(){

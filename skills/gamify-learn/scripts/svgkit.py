@@ -214,11 +214,12 @@ def axes(x, y, w, h, xlabel="", ylabel="", xticks=(), yticks=(), grid=True):
 
 # ------------------------------------------------------------- figure with stages + captions
 class Fig:
-    def __init__(self, w=360, h=180, title=None, caps_width=46):
+    def __init__(self, w=360, h=180, title=None, caps_width=40, cap_size=13.5):
         self.w, self.h = w, h
         self.layers, self.caps = [], {}
         self.title = title
         self.cw = caps_width
+        self.cs = cap_size   # caption size: 13.5 stays readable when a 360-wide drawing is shrunk to a phone screen
 
     def add(self, stage, *shapes):
         self.layers.append((stage, "".join(shapes)))
@@ -232,7 +233,8 @@ class Fig:
         capblocks, y = [], self.h + 10
         for st in sorted(self.caps):
             ls = wrap(self.caps[st], self.cw)
-            hh = 12 + len(ls) * 15
+            lh_ = round(self.cs * 1.25, 1)
+            hh = 14 + len(ls) * lh_
             g = (rect(8, y, self.w - 16, hh, "#fff8ea", "#e0c98a", 8, 1) + badge(24, y + hh / 2, st) +
                  text(40, y + 17, "\n".join(ls), 12.2, INK, "start", 400, lh=1.22))
             capblocks.append((st, g))

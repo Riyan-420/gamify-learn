@@ -53,6 +53,10 @@ Full notes, limits and sources in `references/evidence.md`. Summary the assistan
 7. **Phone.** If the learner will use a phone, run `python scripts/mobile_test.py <Name>.html --w 390` and point them to `docs/PHONE.md` (iPhone and Android steps). Offer a phone-sized PDF if they want to read without sliders.
 8. **Hand over.** File path; how to start (double-click, any browser; progress saves in that browser, Menu then Export); the quest list as a story; which source topics are covered or left out; the honest limits.
 
+## Teaching decks (`"style": "slides"`)
+
+When the learner says the course is too quiz-heavy or wants "slides that explain": set `"style":"slides"`. Teach first: explanation, real pictures (`figure` with `images`, each with a `credit`), diagrams that build in stages, worked examples and labs. Keep quizzes to 3 to 5 per quest and cards to 2 to 4. Research the topic and download or compute figures; credit every picture and never publish copyrighted course figures. Keep a whole deck to about 2 to 3 hours and tell the user honestly if it would run longer and why.
+
 ## Teaching rules inside every quest
 
 - **Decode every formula.** A `decode` step: formula, how to say it aloud, then per symbol a card with name, plain-words meaning and the **effect** of raising it. `[[0|x]]` colour-links formula to cards. No orphan symbol, no undefined abbreviation (glossary too).
@@ -74,6 +78,7 @@ Full notes, limits and sources in `references/evidence.md`. Summary the assistan
 | `scripts/build.py` | course.json to one self-contained HTML |
 | `scripts/smoke_test.py` | headless Chrome renders every screen and checks the lab maths |
 | `scripts/mobile_test.py` | optional: phone-emulated check of every screen for sideways overflow |
+| `scripts/behaviour_test.py` | optional: drives real touch events and checks resume, back-navigation and swipe safety (pinch, edge, code block, zoom) |
 | `scripts/svgkit.py` | helpers for clean, staged explanatory illustrations |
 | `scripts/themes.py` | theme registry (reads each `theme.json`); re-colours illustrations for non-retro themes |
 | `assets/engine/` | the game (CSS, JS, template) |

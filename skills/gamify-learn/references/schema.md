@@ -49,6 +49,7 @@ The learner should always see **where in their material** they are: which lectur
 Then add `source` to a quest (its whole span), a step, or a quiz question: `"source": "L6:28-31"`, `"source": "JM:9.7"`, or a list `["L6:3-12", "JM:9"]`. The game shows it on the quest card ("Lecture 6, slides 28–31"), on the mission screen in full ("Lecture 6 (MT, Attention & Self-Attention), slides 3–31"), on every step (the step's own `source`, else the quest's), and on every quiz question, including warm-ups, daily review and the boss raid, where knowing which lecture a question came from matters most.
 
 Never guess numbers: take them from the `--- page N ---` / `--- slide N ---` markers that `extract_text.py` writes. If the material has no numbers, leave `source` out. (The field is `source`, not `src`: `src` is a figure's image path.) `validate.py` rejects a `source` that names an unknown source, and in `--strict` mode warns about quests without `source` once `sources` exists.
+`style`: `"slides"` makes a **teaching deck**: longer explanation runs (validator allows 7 passive screens in a row instead of 3, up to 24 steps), 3 to 5 quiz questions and 2 to 4 cards per quest, no mandatory brain dump, 2 relearning touchpoints per concept instead of 3. Use it when the learner wants to be taught, not drilled. `max_passive` overrides the passive-run limit.
 `linear` (default true) locks each quest until the previous one is finished; the learner can switch the lock off in Menu.
 `concepts` gives display names to concept ids (ids used in `teaches`, `needs`, `concepts`). Any id used in `teaches` is added automatically with a prettified name if you leave it out. See `learning-line.md`.
 
@@ -126,6 +127,7 @@ Live sliders. Evaluate JavaScript expressions over control ids; `Math` functions
 Inside inline SVG, give elements `data-s="1"`, `data-s="2"` ... Everything without `data-s` is shown at once; each press of SPACE / the red button reveals the next stage (elements sharing a number appear together; unnumbered pieces are always visible). Put a numbered caption in the same stage so the explanation grows with the picture. `scripts/svgkit.py` does this for you (`Fig.add(stage, ...)`, `Fig.cap(stage, text)`). Outside the game (PDF, print, `?reveal`) all stages are visible.
 
 ### figure
+Pictures with a purpose. One picture: `src`, `caption`, `credit`. Several, shown one per press: `"images":[{"src":"fig/a.png","caption":"...","credit":"Author, licence, where"}, ...]` (also allowed on `idea` and `decode` steps). Every picture can be tapped to enlarge (pinch to zoom); inline SVG diagrams in a `figure`/`idea` can be tapped too.
 A picture from the source with a purpose.
 `{"type":"figure","title":"...","src":"fig/a.png","caption":"Look at the red arrow: ...","credit":"Lecture 2, slide 14","lines":["optional bullets"],"keep":"..."}` or `"svg":"<svg>...</svg>"` instead of `src`.
 
@@ -144,6 +146,9 @@ Side-by-side table, one row per reveal. Use it for two similar things people con
 ### dump
 60-second brain dump. Learner types or speaks, then ticks what they remembered.
 `{"type":"dump","prompt":"...","points":["checklist item","..."]}`
+
+### code
+A code or pseudo-code block that scrolls sideways **inside itself** (never turns the page): `{"type":"code","title":"...","code":"for x in ...","lines":["optional bullets"],"keep":"...","trap":"..."}`. An `idea` step also accepts `code`.
 
 ### html
 Escape hatch: `{"type":"html","title":"optional","html":"<div>...</div>"}`.
@@ -176,4 +181,10 @@ Options are shuffled every time. 2 to 3 distractors; 3 is best. `id` is optional
 
 ## Learner keys
 
-SPACE / right arrow = reveal or next, left arrow = back, A to D or 1 to 4 = answer, H = map, R = daily review, G = glossary, T = focus timer, M = sound, Esc = close.
+SPACE / right arrow = reveal or next, left arrow = back (BACK shows the whole page, nothing to re-reveal), A to D or 1 to 4 = answer, H = map, R = daily review, G = glossary, T = focus timer, M = sound, Esc = close.
+
+## Progress and resume (v1.4)
+
+The place in every quest is saved in the browser. The map shows START on a fresh quest, and CONTINUE (with the step number) plus START OVER on one in progress; the title screen's button resumes the last quest where it stopped. Tapping the body of a quest card does nothing: only its buttons open it. A step already completed (quiz answered, warm-up done, solve rated, cards flipped) never blocks NEXT again, and arriving by BACK shows it done. Menu has a switch to turn swipe navigation off.
+
+**Swipe rules:** a swipe changes the screen only when it is one deliberate finger, at least 130 px, mostly horizontal, under 700 ms, not from the screen edge, not while the page is zoomed in, and not starting on code, formulas, plots, sliders, buttons or overlays. Pinching never flips a screen.

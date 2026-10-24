@@ -152,6 +152,16 @@ docs/PHONE.md               how to use a game on iPhone and Android
 tools/package.py            builds dist/gamify-learn.skill
 ```
 
+## What is new in v1.4 (bug fixes)
+
+- **Resume.** Every quest remembers where you stopped. Quest cards show START, or CONTINUE (with the step number) and START OVER. The title screen resumes the last quest. Tapping a card body no longer opens it.
+- **Swipe and pinch.** Pinching to zoom no longer flips the slide. A swipe now needs one deliberate finger (130 px, mostly horizontal, quick), is ignored from the screen edge and while zoomed in, and never starts on code blocks, formulas, plots or sliders. There is a Menu switch to turn it off.
+- **Going back.** BACK shows the whole page at once instead of replaying every reveal, and a step you already did (quiz, warm-up, solve, cards) does not block NEXT again.
+- **Code blocks** scroll sideways inside themselves (new `code` step).
+- **Pictures:** several per step with credits (`images`), tap to enlarge; tap a diagram to enlarge it too.
+- **Teaching decks:** `"style": "slides"` for explanation-first courses with fewer quizzes.
+- Staged-figure captions are larger so they stay readable on a phone. New `scripts/behaviour_test.py` checks resume, back and swipe safety with real touch events.
+
 ## What is new in v1.2
 
 - **Real reveal.** Nothing on a screen is visible before you press SPACE or the red button. (v1.1 had a CSS bug: decoder cards, compare rows, worked steps and flow boxes were already on screen and SPACE only played an animation.)
