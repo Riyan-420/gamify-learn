@@ -38,6 +38,40 @@ def data_uri(path):
         return f"data:{mime};base64," + base64.b64encode(f.read()).decode()
 
 
+KATEX_FONTS = ["KaTeX_Main-Regular", "KaTeX_Main-Bold", "KaTeX_Main-Italic", "KaTeX_Main-BoldItalic", "KaTeX_Math-Italic", "KaTeX_Math-BoldItalic", "KaTeX_AMS-Regular",
+               "KaTeX_Size1-Regular", "KaTeX_Size2-Regular", "KaTeX_Size3-Regular", "KaTeX_Size4-Regular", "KaTeX_Caligraphic-Regular", "KaTeX_SansSerif-Regular", "KaTeX_Typewriter-Regular"]
+
+
+MATH_RX = re.compile(r"\$\$[\s\S]+?\$\$|\$(?!\s)[^$\n]*?[^\s$]\$(?!\d)")   # same rule as the game: "$1,000 and $2,000" is money, not maths
+
+
+def course_uses_math(o):
+    """True if any text holds real $...$ maths or a decode step has a typeset formula (so KaTeX must be inlined)."""
+    if isinstance(o, str):
+        return bool(MATH_RX.search(o.replace("\\$", " ")))
+    if isinstance(o, dict):
+        if o.get("type") == "decode" and o.get("tex"):
+            return True
+        return any(course_uses_math(v) for k, v in o.items() if k not in ("svg", "viz", "code", "src", "images"))
+    if isinstance(o, list):
+        return any(course_uses_math(v) for v in o)
+    return False
+
+
+def katex_assets():
+    """KaTeX (MIT licence) inlined with only the fonts a course needs, as woff2 data URIs. Returns (css_block, js_block)."""
+    css = read("katex", "katex.min.css")
+    css = re.sub(r"@font-face\{[^}]*\}", "", css)
+    faces = []
+    meta = {"Main-Regular": ("KaTeX_Main", 400, "normal"), "Main-Bold": ("KaTeX_Main", 700, "normal"), "Main-Italic": ("KaTeX_Main", 400, "italic"), "Main-BoldItalic": ("KaTeX_Main", 700, "italic"),
+            "Math-Italic": ("KaTeX_Math", 400, "italic"), "Math-BoldItalic": ("KaTeX_Math", 700, "italic"), "AMS-Regular": ("KaTeX_AMS", 400, "normal"),
+            "Size1-Regular": ("KaTeX_Size1", 400, "normal"), "Size2-Regular": ("KaTeX_Size2", 400, "normal"), "Size3-Regular": ("KaTeX_Size3", 400, "normal"), "Size4-Regular": ("KaTeX_Size4", 400, "normal"),
+            "Caligraphic-Regular": ("KaTeX_Caligraphic", 400, "normal"), "SansSerif-Regular": ("KaTeX_SansSerif", 400, "normal"), "Typewriter-Regular": ("KaTeX_Typewriter", 400, "normal")}
+    for key, (fam, w, st) in meta.items():
+        faces.append("@font-face{font-family:'%s';src:url(data:font/woff2;base64,%s) format('woff2');font-weight:%s;font-style:%s}" % (fam, b64("katex", "fonts", "KaTeX_%s.woff2" % key), w, st))
+    return "\n".join(faces) + "\n" + css, "<script>\n" + read("katex", "katex.min.js") + "\n</script>"
+
+
 def inline_images(node, base):
     """Walk the JSON; replace relative image paths with data URIs."""
     pat = re.compile(r'(<img[^>]*?\ssrc=)(["\'])(?!data:|https?:|//)([^"\']+)\2')
@@ -107,6 +141,8 @@ def main():
     inline_images(course, os.path.dirname(course_path))
     course = themes.retheme(course, theme)
     out = a.out or os.path.splitext(course_path)[0] + ".html"
+    uses_math = (course_uses_math(course) or bool(course.get("math"))) and course.get("math") is not False
+    kcss, kjs = katex_assets() if uses_math else ("", "")
 
     cj = json.dumps(course, ensure_ascii=False).replace("</", "<\\/").replace("\u2028", "\\u2028").replace("\u2029", "\\u2029")
     if theme == "retro":
@@ -132,6 +168,8 @@ def main():
             .replace("{{CSS}}", read("engine", "engine.css"))
             .replace("{{THEME_CSS}}", theme_css)
             .replace("{{THEME_JS}}", theme_js)
+            .replace("{{KATEX_CSS}}", kcss)
+            .replace("{{KATEX_JS}}", kjs)
             .replace("{{BG}}", bg)
             .replace("{{FLOOR}}", floor)
             .replace("{{COURSE_JSON}}", cj)

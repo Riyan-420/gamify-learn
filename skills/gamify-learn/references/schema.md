@@ -188,3 +188,40 @@ SPACE / right arrow = reveal or next, left arrow = back (BACK shows the whole pa
 The place in every quest is saved in the browser. The map shows START on a fresh quest, and CONTINUE (with the step number) plus START OVER on one in progress; the title screen's button resumes the last quest where it stopped. Tapping the body of a quest card does nothing: only its buttons open it. A step already completed (quiz answered, warm-up done, solve rated, cards flipped) never blocks NEXT again, and arriving by BACK shows it done. Menu has a switch to turn swipe navigation off.
 
 **Swipe rules:** a swipe changes the screen only when it is one deliberate finger, at least 130 px, mostly horizontal, under 700 ms, not from the screen edge, not while the page is zoomed in, and not starting on code, formulas, plots, sliders, buttons or overlays. Pinching never flips a screen.
+
+
+## Maths fields (any course containing `$...$` gets KaTeX inlined automatically)
+- Text fields accept `$inline$` and `$$display$$` TeX. Use `\cA`..`\cF` (six colours) in a `decode` `tex`, in the same order as the parts cards; hex colours in macros have no `#`.
+- `decode`: `"tex": "..."` instead of `formula` (rendered large and centred).
+- `worked` / `solve` steps: `{"label": "...", "work": "$$..$$" or ["$$..$$", ...], "why": "reason this step is done"}`; `html` optional.
+- Callouts on idea / figure / decode / worked: `intuition`, `shortcut`, `check` (sanity check); `worked` also renders `keep` and `trap`.
+- `html` steps: `$...$` inside the html is rendered too. Formulas wider than the screen shrink to 60%, then scroll.
+- The validator warns about maths written as plain text, an odd number of `$`, and worked steps without a `why`. With Node.js installed it also runs every formula through the shipped KaTeX (`scripts/math_check.py`) and reports the exact reason and place of each broken one as an ERROR.
+- Money is not maths: a `$` opens maths only when a non-space follows it, and closes it only when a non-space precedes it and no digit follows. `$1,000 and $2,000` stays text; `$3x+4=19$` is maths. Write `\$` (in JSON `"\\$"`) for a literal dollar sign next to real maths. The top-level `"math": false` says "this course writes its simple sums as plain text on purpose" (no KaTeX inlined, no plain-maths warnings); the default is to expect typeset maths.
+- Macros (V1.5): `\R \N \Z \Q \C`, `\E`, `\Var`, `\Cov`, `\tr`, `\rank`, `\diag`, `\sign`, `\argmax`, `\argmin`, `A\T` (transpose), `A\inv`, `\given` (the bar in $\Pr(A\mid B)$), `\dd` (the d in an integral), `\abs{x}`, `\norm{v}`, `\set{...}`, `\ip{u}{v}`, `\dv{f}{x}`, `\pdv{f}{x}`, `\eval{F}{a}^{b}`, `\vect{v}`, `\hl{...}`. KaTeX itself supports `aligned`, `cases`, `array`, matrices (`pmatrix`, `bmatrix`, `vmatrix`), `\cancel`, `\underbrace`, `\overbrace`, `\xrightarrow`, `\boxed`, `\binom`, `\sum`, `\int`, `\lim`, `\text`.
+
+### proof (V1.5)
+A claim and the lines that prove it, each with the REASON it is allowed. Kinds: `direct`, `cases`, `contradiction`, `contrapositive`, `induction`, `construction`, `derivation`.
+`{"type":"proof","kind":"induction","title":"...","given":"optional","claim":"$...$","plan":"the idea in one sentence","steps":[{"label":"Base case","work":"$$...$$" or ["$$..$$", ...],"reason":"why this line is allowed"}],"conclusion":"...","keep":"...","trap":"..."}`
+`plan` and a `reason` on every line are strongly recommended (self-explanation of each proof line is what improves proof comprehension).
+
+### graph (V1.5)
+A function plot that builds one stage per press, each stage with a caption. For derivatives (secant to tangent), integrals (rectangles to area), roots, vertex, distributions, asymptotes.
+```json
+{"type":"graph","title":"...","x":[-1,6],"y":[-3,12],"xlabel":"x","ylabel":"y","params":{"mu":0},
+ "functions":[{"expr":"x*x-5*x+6","label":"y = x^2 - 5x + 6","color":0,"dash":false,"stage":0}],
+ "points":[{"x":2,"y":0,"label":"root","stage":1}],             // or {"x":1,"on":0} to sit on function 0
+ "secants":[{"fn":0,"a":1,"b":3,"stage":1,"label":"slope 4"}],
+ "tangents":[{"fn":0,"at":1,"stage":4,"label":"slope 2"}],        // slope is computed for you
+ "shades":[{"fn":0,"from":0,"to":2,"stage":3,"label":"area"},    // area under the curve (to_fn: between two curves)
+           {"fn":0,"from":0,"to":2,"n":4,"mode":"left","stage":1}],  // n: Riemann rectangles, mode left|right|mid
+ "vlines":[{"x":2.5,"stage":2,"label":"axis"}],"hlines":[{"y":0}],"texts":[{"x":1,"y":2,"t":"note"}],
+ "captions":{"1":"What just appeared and why","2":"..."},
+ "lines":["optional bullets"],"intuition":"...","keep":"...","trap":"..."}
+```
+`expr` is JavaScript in `x` (and any `params`): write `pow(x,2)` or `x*x`, never `x^2` (XOR in JavaScript; the validator rejects it). `Math` functions are available bare (`sin`, `exp`, `sqrt`, `PI`). Curves that blow up (`tan`, `1/x`) are cut at the asymptote. `stage` 0 or missing = always visible; 1, 2, 3 ... appear one per press together with the caption of the same number. Labels inside the picture are plain text; put formulas in `captions` and `lines`.
+
+### spot (V1.5)
+A worked solution with a planted mistake: the learner taps the line they think is wrong and is told why that line is right or wrong. The IES What Works Clearinghouse algebra practice guide recommends analysing solved problems, including incorrect ones (its evidence level for that recommendation is "minimal", so treat it as a good habit, not a proven fix).
+`{"type":"spot","title":"Find the mistake","problem":"$...$","steps":[{"label":"Line 1","work":"$$..$$","wrong":true,"mistake":"why it is wrong","fix":"$$corrected$$"},{"label":"Line 2","work":"$$..$$","why":"why this line is fine (shown if tapped)"}],"answer":"the correct result","lesson":"the rule that prevents it"}`
+Several lines may be `wrong`. XP: 8 first try, 5 after one miss, 3 otherwise; the step blocks NEXT until the mistake is found or revealed.

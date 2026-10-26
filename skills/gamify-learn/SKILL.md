@@ -1,6 +1,6 @@
 ---
 name: gamify-learn
-description: Turn course material (lecture slides, PDFs, notes, textbook chapters, a syllabus, or just a topic) into a study game (the user picks a style each time: retro, minimal or modern), one offline HTML file, that teaches in one straight line from zero to solving problems. Quests unlock in order, every idea is taught once and then deliberately relearned, every formula is decoded symbol by symbol, labs show each symbol acting, and the finale is solving. Built on ADHD and learning-science research. Use when the user wants to learn or revise from material, wants gamified or interactive study material, is preparing for a quiz or exam, says they have ADHD or cannot focus on long slides, or complains that slides show formulas without explaining what things are.
+description: Turn course material (lecture slides, PDFs, notes, textbook chapters, a syllabus, or just a topic) into a study game (the user picks a style each time: retro, minimal or modern), one offline HTML file, that teaches in one straight line from zero to solving problems. Quests unlock in order, every idea is taught once and then deliberately relearned, every formula is decoded symbol by symbol, labs show each symbol acting, and the finale is solving. Built on ADHD and learning-science research. Use when the user wants to learn or revise from material, wants gamified or interactive study material, is preparing for a quiz or exam, says they have ADHD or cannot focus on long slides, or complains that slides show formulas without explaining what things are. Teaches any maths from zero: typeset formulas and matrices, every step with its reason, graphs, proofs and find-the-mistake steps.
 ---
 
 # gamify-learn
@@ -57,6 +57,16 @@ Full notes, limits and sources in `references/evidence.md`. Summary the assistan
 
 When the learner says the course is too quiz-heavy or wants "slides that explain": set `"style":"slides"`. Teach first: explanation, real pictures (`figure` with `images`, each with a `credit`), diagrams that build in stages, worked examples and labs. Keep quizzes to 3 to 5 per quest and cards to 2 to 4. Research the topic and download or compute figures; credit every picture and never publish copyrighted course figures. Keep a whole deck to about 2 to 3 hours and tell the user honestly if it would run longer and why.
 
+## Maths (V1.5): if the material has ANY maths, read `references/math-teaching.md` first
+
+A learner with zero background must be able to follow every formula, derivation, matrix, graph and proof. The engine has the tools; use them:
+
+- **Typeset everything** with `$...$` and `$$...$$` (KaTeX is inlined, works offline). Never write `x^2`, `sqrt(x)` or `[1 0; 0 1]` as plain text (the validator warns). Matrices in full `pmatrix` form. Short macros: `\R \N \Z \Q \C`, `\abs{x}`, `\norm{v}`, `\set{..}`, `\ip{u}{v}`, `\dv{f}{x}`, `\pdv{f}{x}`, `\dd`, `\E \Var \Cov`, `\argmax \argmin`, `A\T`, `A\inv`, `\hl{..}` (highlight what changed) and `\cA{..}`..`\cF{..}` (colours linking a formula to its decoder cards).
+- **Every worked step = label + working + WHY.** Show the rough work: the division, then the power, then the product. Add `intuition`, `shortcut` (find them) and `check` (sanity test) callouts.
+- **Pick the step type for the kind of maths:** `worked` and `solve` (calculation), `decode` (a formula and every symbol), `proof` (claim, plan, lines with a REASON each; direct, cases, contradiction, induction, derivation), `graph` (functions, points, tangents, secants, shaded areas, Riemann rectangles, built stage by stage with a caption each), `lab` (sliders: parameters, matrices moving a square), `spot` (a worked solution with a planted mistake: tap the wrong line), `compare` (two valid strategies side by side).
+- **Check before you ship.** `validate.py` runs every formula through the shipped KaTeX when Node.js is installed (`scripts/math_check.py`), so a broken formula is an ERROR at build time, not a red box in front of the learner. It also rejects `^` in graph/lab expressions (that is XOR in JavaScript; write `pow(x,2)`).
+- Then open the built game, step through a `graph`, a `proof` and a `spot`, and look at a phone-width screen. The demo `examples/math-showcase/` uses every one of these.
+
 ## Teaching rules inside every quest
 
 - **Decode every formula.** A `decode` step: formula, how to say it aloud, then per symbol a card with name, plain-words meaning and the **effect** of raising it. `[[0|x]]` colour-links formula to cards. No orphan symbol, no undefined abbreviation (glossary too).
@@ -88,5 +98,9 @@ When the learner says the course is too quiz-heavy or wants "slides that explain
 | `references/learning-line.md` | how to sequence, link and relearn |
 | `references/authoring-guide.md` | how to write a course that teaches |
 | `references/schema.md` | every field of course.json |
+| `references/math-teaching.md` | how to teach maths: typeset formulas (`$...$`, KaTeX is inlined offline), worked steps with a WHY each, intuition / shortcut / sanity-check callouts, matrices in full form; research behind it |
 | `references/evidence.md` | the research, with honest limits and sources |
+| `scripts/math_check.py` + `math_check.js` | pre-checks every formula with the shipped KaTeX (needs Node.js, skipped without it); `validate.py` calls it |
+| `assets/katex/` | KaTeX 0.16.11 (MIT), inlined only into courses that use maths |
 | `examples/compound-interest/` | four-quest demo course + built game |
+| `examples/math-showcase/` | six-quest maths demo: equations, quadratics, calculus graphs, matrices, probability, proofs, spot-the-mistake |

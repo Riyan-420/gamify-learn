@@ -176,7 +176,7 @@ figcaption{color:var(--mut);font-size:.88em}
 
 /* worked + solve: numbered steps (a real sequence) */
 .steps{gap:8px}
-.steps li{border:1px solid var(--rule);border-radius:var(--r);background:var(--sheet);box-shadow:none;grid-template-columns:34px 160px 1fr}
+.steps li{border:1px solid var(--rule);border-radius:var(--r);background:var(--sheet);box-shadow:none;grid-template-columns:34px minmax(0,1fr)}
 .steps li::before{border-radius:50%;width:26px;height:26px;padding:0;display:flex;align-items:center;justify-content:center;font:700 13px var(--ui);background:var(--ink);color:#fff}
 .steps .sl{font:700 14px/1.4 var(--ui);letter-spacing:0;text-transform:none;color:var(--ink2);padding-top:2px}
 .steps .sw{font-family:var(--mono);font-size:.84em}
@@ -262,8 +262,7 @@ svg [data-s].on{animation:mfade .25s ease-out both}
   .xpbar{width:56px}
   .nav .btn{max-width:62vw}
   .fbox{padding:16px 12px}
-  .steps li{grid-template-columns:30px 1fr}
-  .steps .sl{grid-column:2}
+  .steps li{grid-template-columns:30px minmax(0,1fr)}
 }
 @media(prefers-reduced-motion:reduce){*,*::before,*::after{animation:none!important;transition:none!important}}
 

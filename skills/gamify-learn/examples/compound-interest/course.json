@@ -1,6 +1,7 @@
 {
  "title": "Compound Interest",
  "slug": "compound-interest",
+ "math": false,
  "subtitle": "Why money grows like a snowball. Four short quests in one direction: see it, decode it, estimate it, solve it.",
  "about": "Demo course shipped with the gamify-learn skill. Original content that shows every feature: concept ledger, warm-ups, decoder, flow, compare, worked example, labs, solve steps, quizzes, flashcards.",
  "focus_minutes": 15,
@@ -399,27 +400,33 @@
      "steps": [
       {
        "label": "List the symbols",
-       "work": "P = 2000,  r = 0.06,  n = 12,  t = 5"
+       "work": "P = 2000,  r = 0.06,  n = 12,  t = 5",
+       "why": "Name every input first, as numbers, so nothing is forgotten later."
       },
       {
        "label": "Slice the rate",
-       "work": "r / n = 0.06 / 12 = 0.005"
+       "work": "r / n = 0.06 / 12 = 0.005",
+       "why": "Interest is added 12 times a year, so each slice gets one twelfth of the yearly rate."
       },
       {
        "label": "Count the slices",
-       "work": "n x t = 12 x 5 = 60"
+       "work": "n x t = 12 x 5 = 60",
+       "why": "5 years with 12 slices each is 60 slices in total."
       },
       {
        "label": "Growth per slice",
-       "work": "1 + 0.005 = 1.005"
+       "work": "1 + 0.005 = 1.005",
+       "why": "Each slice multiplies the balance by 1 plus the slice rate."
       },
       {
        "label": "Repeat 60 times",
-       "work": "1.005^60 = 1.34885"
+       "work": "1.005^60 = 1.34885",
+       "why": "Multiplying by 1.005 sixty times is the same as raising 1.005 to the power 60."
       },
       {
        "label": "Scale by P",
-       "work": "2000 x 1.34885 = 2697.70"
+       "work": "2000 x 1.34885 = 2697.70",
+       "why": "This is the growth FACTOR; multiply by the starting 2000 to get dollars."
       }
      ],
      "answer": "A is about **$2,697.70**. Interest earned: about $697.70.",
@@ -737,15 +744,18 @@
      "steps": [
       {
        "label": "Rule of 72",
-       "work": "72 / 6 = 12 years to double"
+       "work": "72 / 6 = 12 years to double",
+       "why": "Dividing 72 by the percent gives the doubling time in years, a quick estimate."
       },
       {
        "label": "4x = two doublings",
-       "work": "double once, then double again: 12 + 12 = 24 years"
+       "work": "double once, then double again: 12 + 12 = 24 years",
+       "why": "4 is 2 times 2, so quadrupling needs two doublings in a row."
       },
       {
        "label": "Sanity check",
-       "work": "1.06^12 = 2.01 (about double). 1.06^24 = 4.05 (about 4x)"
+       "work": "1.06^12 = 2.01 (about double). 1.06^24 = 4.05 (about 4x)",
+       "why": "Compute the real powers to see that the shortcut lands close to the exact answer."
       }
      ],
      "answer": "Doubles in about **12 years**, quadruples in about **24 years**.",

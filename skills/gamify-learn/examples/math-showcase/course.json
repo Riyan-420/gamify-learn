@@ -1,0 +1,2137 @@
+{
+ "title": "Maths Showcase",
+ "slug": "math-showcase",
+ "theme": "modern",
+ "style": "slides",
+ "subtitle": "One original course that uses every maths feature of gamify-learn V1.5: equations, graphs, proofs, matrices, calculus, probability.",
+ "about": "Demo and regression test for the maths layer. Original content. If a formula, graph, proof or spot-the-mistake step looks wrong here, it is a bug.",
+ "focus_minutes": 15,
+ "glossary": [
+  {
+   "term": "Root",
+   "meaning": "An $x$ value where a function equals zero: where its graph meets the x-axis.",
+   "where": "Quest 2"
+  },
+  {
+   "term": "Discriminant",
+   "meaning": "$b^2-4ac$. Positive: two real roots. Zero: one. Negative: none.",
+   "where": "Quest 2"
+  },
+  {
+   "term": "Secant",
+   "meaning": "A straight line through two points of a curve.",
+   "where": "Quest 3"
+  },
+  {
+   "term": "Derivative",
+   "meaning": "The slope of a curve at a point; $f'(x)$ or $\\dv{f}{x}$.",
+   "where": "Quest 3"
+  },
+  {
+   "term": "Integral",
+   "meaning": "The area under a curve: $\\int_a^b f(x)\\,\\dd x$.",
+   "where": "Quest 3"
+  },
+  {
+   "term": "Determinant",
+   "meaning": "For a 2 by 2 matrix, $ad-bc$. The factor by which areas scale.",
+   "where": "Quest 4"
+  },
+  {
+   "term": "Transpose",
+   "meaning": "Flip a matrix over its diagonal: $A\\T$.",
+   "where": "Quest 4"
+  },
+  {
+   "term": "Prior",
+   "meaning": "Your belief $\\Pr(H)$ before seeing the evidence.",
+   "where": "Quest 5"
+  },
+  {
+   "term": "Induction",
+   "meaning": "A proof that shows a first case and that each case implies the next.",
+   "where": "Quest 5"
+  },
+  {
+   "term": "Standard deviation",
+   "meaning": "$\\sigma$: the typical distance of values from the mean.",
+   "where": "Quest 5"
+  }
+ ],
+ "quests": [
+  {
+   "id": "q1",
+   "title": "Equations: keep the balance",
+   "world": "1-1",
+   "minutes": 14,
+   "question": "How do you find the unknown in an equation without guessing?",
+   "outcomes": [
+    "Solve a linear equation and show every line",
+    "Say WHY each line is allowed",
+    "Pick the quicker of two correct strategies",
+    "Catch the classic bracket mistake"
+   ],
+   "steps": [
+    {
+     "type": "predict",
+     "prompt": "A scale balances: 3 identical bags plus 4 loose coins on the left, 19 coins on the right. How many coins are in one bag?",
+     "answer": "5 coins. Take the 4 loose coins off BOTH sides (15 coins left), then split the 15 coins between the 3 bags."
+    },
+    {
+     "type": "idea",
+     "title": "An equation is a balanced scale",
+     "lines": [
+      "$3x+4=19$ says: three bags of $x$ coins each, plus 4 loose coins, weigh the same as 19 coins.",
+      "One rule keeps the scale balanced: **whatever you do to one side, do to the other side.**",
+      "The goal is one bag alone on a side: $x=\\text{a number}$."
+     ],
+     "analogy": "A see-saw. Add a kilo to one side and it tips. Add a kilo to both sides and it stays level.",
+     "intuition": "Solving means undoing what was done to $x$, last thing first. Here $x$ was multiplied by 3, then 4 was added. So subtract 4 first, then divide by 3.",
+     "teaches": [
+      "balance"
+     ]
+    },
+    {
+     "type": "worked",
+     "title": "Solve $3x+4=19$, every line",
+     "problem": "Find $x$ in $3x+4=19$.",
+     "steps": [
+      {
+       "label": "Read the equation",
+       "work": "$$\\underbrace{3x}_{\\text{3 bags}}+\\underbrace{4}_{\\text{4 coins}}=19$$",
+       "why": "Name the pieces first. 3 bags and 4 coins weigh the same as 19 coins."
+      },
+      {
+       "label": "Take off the loose coins",
+       "work": [
+        "$$3x+4\\;\\hl{-4}=19\\;\\hl{-4}$$",
+        "$$3x=15$$"
+       ],
+       "why": "Subtracting 4 undoes the +4. It must happen on BOTH sides or the scale tips."
+      },
+      {
+       "label": "Split into one bag",
+       "work": [
+        "$$\\frac{3x}{\\hl{3}}=\\frac{15}{\\hl{3}}$$",
+        "$$x=5$$"
+       ],
+       "why": "Dividing by 3 undoes the 'times 3'. The 3 on the left cancels with the 3 under $3x$."
+      },
+      {
+       "label": "Check by putting 5 back",
+       "work": "$$3(5)+4=15+4=19\\;\\checkmark$$",
+       "why": "If both sides still match, the answer is right. Always do this; it catches slips."
+      }
+     ],
+     "answer": "$x=5$",
+     "teaches": [
+      "inverse_ops"
+     ],
+     "shortcut": "Moving a term across the $=$ flips its sign: $3x=19-4$. It is the same step, written faster.",
+     "check": "Put your answer back into the ORIGINAL equation, not into a line you rewrote.",
+     "trap": "Dividing only part of the left side: $\\frac{3x+4}{3}$ is not $x+4$. Divide EVERY term, or subtract first."
+    },
+    {
+     "type": "compare",
+     "title": "Two correct ways. Which is quicker?",
+     "teaches": [
+      "strategies"
+     ],
+     "intro": "Solve $10(y+2)=6(y+2)+12$. Both ways are right; one is shorter.",
+     "headers": [
+      "Open the brackets first",
+      "Treat $(y+2)$ as one block"
+     ],
+     "rows": [
+      [
+       "First move",
+       "$10y+20=6y+12+12$",
+       "$10(y+2)-6(y+2)=12$"
+      ],
+      [
+       "Next",
+       "$10y+20=6y+24$",
+       "$4(y+2)=12$"
+      ],
+      [
+       "Then",
+       "$4y=4$",
+       "$y+2=3$"
+      ],
+      [
+       "Answer",
+       "$y=1$",
+       "$y=1$"
+      ],
+      [
+       "Verdict",
+       "4 lines, more places to slip",
+       "3 lines. Spotting the repeated block is the trick."
+      ]
+     ],
+     "keep": "Before you start, look at the structure. A repeated block is a hint to treat it as one thing."
+    },
+    {
+     "type": "quiz",
+     "ids": [
+      "a",
+      "b"
+     ]
+    },
+    {
+     "type": "spot",
+     "title": "Find the mistake",
+     "problem": "Solve $2(x+3)=14$.",
+     "steps": [
+      {
+       "label": "Line 1",
+       "work": "$$2x+3=14$$",
+       "wrong": true,
+       "mistake": "The 2 multiplies BOTH terms in the bracket: $2(x+3)=2x+6$, not $2x+3$.",
+       "fix": "$$2x+6=14$$"
+      },
+      {
+       "label": "Line 2",
+       "work": "$$2x=14-3=11$$",
+       "why": "The move itself (subtract 3 from both sides) is legal. It only carries the error from line 1 forward."
+      },
+      {
+       "label": "Line 3",
+       "work": "$$x=\\frac{11}{2}=5.5$$",
+       "why": "Dividing both sides by 2 is legal too. The wrong value comes from line 1."
+      }
+     ],
+     "answer": "Correct working: $2x+6=14\\Rightarrow 2x=8\\Rightarrow x=4$.",
+     "lesson": "A number outside a bracket multiplies EVERYTHING inside: $a(b+c)=ab+ac$. Check by substituting: $2(4+3)=14$."
+    },
+    {
+     "type": "solve",
+     "title": "Your turn 1",
+     "problem": "Solve $5x-7=3x+9$.",
+     "needs": [
+      "balance",
+      "inverse_ops"
+     ],
+     "hints": [
+      "You have $x$ on both sides. Get all the $x$ terms on one side first.",
+      "Subtract $3x$ from both sides, then add 7 to both sides.",
+      "You should reach $2x=16$."
+     ],
+     "steps": [
+      {
+       "label": "Gather the $x$ terms",
+       "work": [
+        "$$5x-7\\;\\hl{-3x}=3x+9\\;\\hl{-3x}$$",
+        "$$2x-7=9$$"
+       ],
+       "why": "Subtract 3x from both sides so x lives on one side only."
+      },
+      {
+       "label": "Clear the loose number",
+       "work": [
+        "$$2x-7\\;\\hl{+7}=9\\;\\hl{+7}$$",
+        "$$2x=16$$"
+       ],
+       "why": "Add 7 to both sides: it undoes the -7."
+      },
+      {
+       "label": "Divide",
+       "work": "$$x=\\frac{16}{2}=8$$",
+       "why": "Undo the 'times 2'."
+      },
+      {
+       "label": "Check",
+       "work": "$$5(8)-7=33,\\qquad 3(8)+9=33\\;\\checkmark$$",
+       "why": "Both sides give 33."
+      }
+     ],
+     "answer": "$x=8$"
+    }
+   ],
+   "quiz": [
+    {
+     "q": "To solve $x+9=20$ you subtract 9. Why on BOTH sides?",
+     "answer": "To keep the scale balanced",
+     "wrong": [
+      "To make the numbers smaller",
+      "Because 9 is odd",
+      "Only the left side has an x"
+     ],
+     "why": "An equation says two sides are equal. Do the same to both and they stay equal.",
+     "concepts": [
+      "balance"
+     ],
+     "tag": "CHECK",
+     "id": "a"
+    },
+    {
+     "q": "What is $x$ in $4x-6=14$?",
+     "answer": "$x=5$",
+     "wrong": [
+      "$x=2$",
+      "$x=20$",
+      "$x=3.5$"
+     ],
+     "why": "Add 6: $4x=20$. Divide by 4: $x=5$. Check: $4(5)-6=14$.",
+     "concepts": [
+      "inverse_ops"
+     ],
+     "tag": "CHECK",
+     "id": "b"
+    }
+   ],
+   "cards": [
+    {
+     "front": "The one rule for solving equations",
+     "back": "Do the same thing to both sides.",
+     "concepts": [
+      "balance"
+     ]
+    },
+    {
+     "front": "$a(b+c)=\\;?$",
+     "back": "$ab+ac$. The outside number multiplies everything inside.",
+     "concepts": [
+      "inverse_ops"
+     ]
+    }
+   ],
+   "recap": {
+    "lines": [
+     "An equation is a balance: do the same to both sides.",
+     "Undo operations in reverse order.",
+     "Always check by substituting back.",
+     "Spot repeated blocks to shorten the work."
+    ],
+    "teach": "Explain to a friend why we subtract on both sides."
+   }
+  },
+  {
+   "id": "q2",
+   "title": "Quadratics: roots, curve and formula",
+   "world": "1-2",
+   "minutes": 18,
+   "question": "Where does a U-shaped curve cross zero, and is there a formula that always finds it?",
+   "previously": "You can solve equations where $x$ appears once. Now $x$ appears squared.",
+   "outcomes": [
+    "Read roots, vertex and intercept off a parabola",
+    "Use the quadratic formula without dropping a sign",
+    "Predict the number of roots from the discriminant",
+    "Follow a derivation line by line"
+   ],
+   "needs": [
+    "inverse_ops"
+   ],
+   "steps": [
+    {
+     "type": "predict",
+     "prompt": "Throw a ball up and plot its height against time. What shape do you think the graph has, and when is the height zero?",
+     "answer": "A hill-shaped curve (a parabola). The height is zero at launch and again when the ball lands: two moments, two roots."
+    },
+    {
+     "type": "idea",
+     "title": "A quadratic draws a U",
+     "teaches": [
+      "parabola"
+     ],
+     "lines": [
+      "A quadratic has an $x^2$ term: $y=ax^2+bx+c$. Its graph is a U-shaped curve called a **parabola**.",
+      "The **roots** are the $x$ values where the curve touches $y=0$. Solving $ax^2+bx+c=0$ means finding them."
+     ],
+     "analogy": "Throw a ball: it rises, peaks, falls. Height against time is a parabola. The roots are the moments it is at ground level."
+    },
+    {
+     "type": "graph",
+     "title": "The curve $y=x^2-5x+6$",
+     "x": [
+      -1,
+      6
+     ],
+     "y": [
+      -3,
+      12
+     ],
+     "xlabel": "x",
+     "ylabel": "y",
+     "functions": [
+      {
+       "expr": "x*x-5*x+6",
+       "label": "y = x^2 - 5x + 6"
+      }
+     ],
+     "points": [
+      {
+       "x": 2,
+       "y": 0,
+       "label": "x = 2",
+       "stage": 1,
+       "color": 1
+      },
+      {
+       "x": 3,
+       "y": 0,
+       "label": "x = 3",
+       "stage": 1,
+       "color": 1
+      },
+      {
+       "x": 2.5,
+       "y": -0.25,
+       "label": "lowest point",
+       "stage": 2,
+       "color": 3
+      },
+      {
+       "x": 0,
+       "y": 6,
+       "label": "(0, 6)",
+       "stage": 3,
+       "color": 0
+      }
+     ],
+     "vlines": [
+      {
+       "x": 2.5,
+       "stage": 2,
+       "label": "axis"
+      }
+     ],
+     "captions": {
+      "1": "The curve meets the x-axis where $y=0$: at $x=2$ and $x=3$. These are the **roots**.",
+      "2": "The lowest point sits exactly halfway between the roots, at $x=\\frac{2+3}{2}=2.5$.",
+      "3": "At $x=0$ the curve is at $y=6$. That is the constant $c$: the height where the curve cuts the y-axis."
+     },
+     "keep": "Two roots = the curve crosses the axis twice. The picture and the algebra give the same numbers."
+    },
+    {
+     "type": "decode",
+     "title": "The quadratic formula",
+     "teaches": [
+      "quad_formula",
+      "discriminant"
+     ],
+     "intro": "For $ax^2+bx+c=0$ the roots are:",
+     "tex": "x=\\frac{-\\cB{b}\\;\\cE{\\pm}\\;\\sqrt{\\cD{\\cB{b}^2-4\\cA{a}\\cC{c}}}}{2\\cA{a}}",
+     "read": "x equals minus b, plus or minus the square root of (b squared minus 4 a c), all over 2 a.",
+     "parts": [
+      {
+       "sym": "$a$",
+       "name": "a: the x-squared number",
+       "plain": "The number in front of $x^2$. It sets how wide or narrow the U is, and whether it opens up ($a>0$) or down ($a<0$).",
+       "effect": "Bigger |a| = a narrower U."
+      },
+      {
+       "sym": "$b$",
+       "name": "b: the x number",
+       "plain": "The number in front of $x$. Keep its sign: in $x^2-5x+6$, $b=-5$.",
+       "effect": "Shifts the curve sideways."
+      },
+      {
+       "sym": "$c$",
+       "name": "c: the loose number",
+       "plain": "The number with no $x$. It is the height where the curve cuts the y-axis.",
+       "effect": "Moves the whole curve up or down."
+      },
+      {
+       "sym": "$b^2-4ac$",
+       "name": "the discriminant",
+       "plain": "The number under the square root. It decides how many real roots there are.",
+       "effect": "Positive: 2 roots. Zero: 1 root. Negative: none (the curve misses the axis)."
+      },
+      {
+       "sym": "$\\pm$",
+       "name": "plus-or-minus",
+       "plain": "Do the sum twice: once with +, once with -. That is where the two roots come from.",
+       "effect": "Both answers are valid roots."
+      }
+     ],
+     "trap": "Writing $b=5$ when the equation has $-5x$. A lost minus sign gives wrong roots every time. Write $a=\\;,\\;b=\\;,\\;c=\\;$ with signs first."
+    },
+    {
+     "type": "worked",
+     "title": "Solve $x^2-5x+6=0$ with the formula",
+     "problem": "Find the roots of $x^2-5x+6=0$.",
+     "steps": [
+      {
+       "label": "Read off a, b, c",
+       "work": "$$a=1,\\qquad b=-5,\\qquad c=6$$",
+       "why": "Compare with $ax^2+bx+c$. Take each number WITH its sign: $-5x$ means $b=-5$."
+      },
+      {
+       "label": "Discriminant",
+       "work": [
+        "$$b^2-4ac=(-5)^2-4(1)(6)$$",
+        "$$=25-24=1$$"
+       ],
+       "why": "$(-5)^2=25$: a negative squared is positive. The result 1 is positive, so we expect two roots."
+      },
+      {
+       "label": "Square root",
+       "work": "$$\\sqrt{1}=1$$",
+       "why": "Easy here; in general leave it as a root if it is not a perfect square."
+      },
+      {
+       "label": "Plug in",
+       "work": "$$x=\\frac{-(-5)\\pm 1}{2(1)}=\\frac{5\\pm1}{2}$$",
+       "why": "$-(-5)=+5$: two minus signs make a plus."
+      },
+      {
+       "label": "Do + and - separately",
+       "work": [
+        "$$x=\\frac{5+1}{2}=3$$",
+        "$$x=\\frac{5-1}{2}=2$$"
+       ],
+       "why": "The plus-or-minus gives one root each way."
+      },
+      {
+       "label": "Check with the graph",
+       "work": "$$3^2-5(3)+6=0,\\qquad 2^2-5(2)+6=0\\;\\checkmark$$",
+       "why": "These are exactly the points where the graph crossed the axis."
+      }
+     ],
+     "answer": "$x=2$ or $x=3$",
+     "needs": [
+      "quad_formula"
+     ],
+     "shortcut": "When $a=1$, look for two numbers that multiply to $c$ and add to $b$ with the opposite sign: $2\\times3=6$, $2+3=5$. No formula needed.",
+     "check": "The roots must match the places the curve crosses the x-axis."
+    },
+    {
+     "type": "lab",
+     "title": "Move $a$, $b$, $c$ and watch the roots",
+     "intro": "The red line is the parabola. Watch the discriminant: when it goes negative the curve floats off the axis.",
+     "controls": [
+      {
+       "id": "a",
+       "label": "$a$ (x-squared number)",
+       "min": -2,
+       "max": 2,
+       "step": 0.5,
+       "value": 1,
+       "fmt": "1"
+      },
+      {
+       "id": "b",
+       "label": "$b$ (x number)",
+       "min": -6,
+       "max": 6,
+       "step": 0.5,
+       "value": -5,
+       "fmt": "1"
+      },
+      {
+       "id": "c",
+       "label": "$c$ (loose number)",
+       "min": -6,
+       "max": 12,
+       "step": 0.5,
+       "value": 6,
+       "fmt": "1"
+      }
+     ],
+     "outputs": [
+      {
+       "label": "Discriminant $b^2-4ac$",
+       "expr": "b*b-4*a*c",
+       "fmt": "1"
+      },
+      {
+       "label": "Height at x = 0",
+       "expr": "c",
+       "fmt": "1"
+      }
+     ],
+     "plot": {
+      "x": [
+       -1,
+       6
+      ],
+      "ymin": -10,
+      "ymax": 15,
+      "xlabel": "x",
+      "ylabel": "y",
+      "series": [
+       {
+        "expr": "a*x*x+b*x+c",
+        "label": "y"
+       }
+      ]
+     },
+     "tries": [
+      "Set $c=12$ and watch the discriminant turn negative.",
+      "Set $a=-1$ and see the U flip upside down."
+     ],
+     "keep": "Discriminant above 0 = two crossings, 0 = touches once, below 0 = never crosses."
+    },
+    {
+     "type": "proof",
+     "kind": "derivation",
+     "title": "Where the formula comes from",
+     "given": "$ax^2+bx+c=0$ with $a\\neq0$",
+     "claim": "$x=\\dfrac{-b\\pm\\sqrt{b^2-4ac}}{2a}$",
+     "plan": "Rewrite the left side as a perfect square (completing the square), then take square roots.",
+     "steps": [
+      {
+       "label": "Divide by a",
+       "work": "$$x^2+\\frac{b}{a}x+\\frac{c}{a}=0$$",
+       "reason": "We may divide both sides by $a$ because $a\\neq0$. Now $x^2$ has coefficient 1."
+      },
+      {
+       "label": "Move the constant",
+       "work": "$$x^2+\\frac{b}{a}x=-\\frac{c}{a}$$",
+       "reason": "Subtract c/a from both sides."
+      },
+      {
+       "label": "Add the missing square",
+       "work": "$$x^2+\\frac{b}{a}x+\\left(\\frac{b}{2a}\\right)^2=-\\frac{c}{a}+\\left(\\frac{b}{2a}\\right)^2$$",
+       "reason": "Half of $\\frac{b}{a}$ is $\\frac{b}{2a}$. Adding its square to BOTH sides completes the square."
+      },
+      {
+       "label": "Factor the left",
+       "work": "$$\\left(x+\\frac{b}{2a}\\right)^2=\\frac{b^2-4ac}{4a^2}$$",
+       "reason": "$u^2+2uv+v^2=(u+v)^2$. The right side: common denominator $4a^2$."
+      },
+      {
+       "label": "Square root of both sides",
+       "work": "$$x+\\frac{b}{2a}=\\pm\\frac{\\sqrt{b^2-4ac}}{2a}$$",
+       "reason": "A number and its negative both square to the same value, hence $\\pm$. $\\sqrt{4a^2}=2a$."
+      },
+      {
+       "label": "Isolate x",
+       "work": "$$x=\\frac{-b\\pm\\sqrt{b^2-4ac}}{2a}$$",
+       "reason": "Subtract b/2a from both sides and combine the fractions."
+      }
+     ],
+     "conclusion": "This is the quadratic formula. It works for every a, b, c with a not zero.",
+     "keep": "The formula is not magic: it is completing the square done once, for all numbers."
+    },
+    {
+     "type": "quiz",
+     "ids": [
+      "a",
+      "b",
+      "c"
+     ]
+    },
+    {
+     "type": "solve",
+     "title": "Your turn 2",
+     "problem": "Use the formula to solve $2x^2+3x-2=0$.",
+     "needs": [
+      "quad_formula",
+      "discriminant"
+     ],
+     "hints": [
+      "Read off $a=2$, $b=3$, $c=-2$ with their signs.",
+      "Discriminant: $3^2-4(2)(-2)$. Two minus signs make a plus.",
+      "You should get 25, so $\\sqrt{25}=5$."
+     ],
+     "steps": [
+      {
+       "label": "a, b, c",
+       "work": "$$a=2,\\quad b=3,\\quad c=-2$$",
+       "why": "Signs included."
+      },
+      {
+       "label": "Discriminant",
+       "work": [
+        "$$b^2-4ac=3^2-4(2)(-2)$$",
+        "$$=9+16=25$$"
+       ],
+       "why": "$-4\\times2\\times(-2)=+16$."
+      },
+      {
+       "label": "Roots",
+       "work": [
+        "$$x=\\frac{-3\\pm5}{2(2)}=\\frac{-3\\pm5}{4}$$",
+        "$$x=\\frac{-3+5}{4}=\\frac12,\\qquad x=\\frac{-3-5}{4}=-2$$"
+       ],
+       "why": "Plus and minus each give one root."
+      }
+     ],
+     "answer": "$x=\\frac12$ or $x=-2$"
+    }
+   ],
+   "quiz": [
+    {
+     "q": "For $x^2-4x+4=0$, what is the discriminant $b^2-4ac$?",
+     "answer": "0",
+     "wrong": [
+      "16",
+      "-16",
+      "8"
+     ],
+     "why": "$(-4)^2-4(1)(4)=16-16=0$. Zero means the curve just touches the axis: one root ($x=2$).",
+     "concepts": [
+      "discriminant"
+     ],
+     "tag": "CHECK",
+     "id": "a"
+    },
+    {
+     "q": "A parabola has discriminant $-7$. How many times does it cross the x-axis?",
+     "answer": "Never",
+     "wrong": [
+      "Once",
+      "Twice",
+      "Seven times"
+     ],
+     "why": "A negative discriminant needs the square root of a negative number, which is not real. The curve misses the axis.",
+     "concepts": [
+      "discriminant",
+      "parabola"
+     ],
+     "tag": "CHECK",
+     "id": "b"
+    },
+    {
+     "q": "In $3x^2-8x+1=0$ what is $b$?",
+     "answer": "$-8$",
+     "wrong": [
+      "$8$",
+      "$3$",
+      "$1$"
+     ],
+     "why": "b is the number in front of x, with its sign.",
+     "concepts": [
+      "quad_formula"
+     ],
+     "tag": "CHECK",
+     "id": "c"
+    },
+    {
+     "q": "What does 'subtract 5 from both sides' keep true?",
+     "answer": "The two sides stay equal",
+     "wrong": [
+      "x stays the same",
+      "The answer is positive",
+      "The equation gets shorter"
+     ],
+     "why": "Same operation on both sides keeps the balance (Quest 1).",
+     "concepts": [
+      "balance"
+     ],
+     "tag": "CHECK",
+     "id": "d"
+    }
+   ],
+   "cards": [
+    {
+     "front": "Quadratic formula",
+     "back": "$x=\\dfrac{-b\\pm\\sqrt{b^2-4ac}}{2a}$",
+     "concepts": [
+      "quad_formula"
+     ]
+    },
+    {
+     "front": "Discriminant: what does its sign tell you?",
+     "back": "$b^2-4ac>0$: two roots. $=0$: one. $<0$: none.",
+     "concepts": [
+      "discriminant"
+     ]
+    },
+    {
+     "front": "Roots of a parabola",
+     "back": "The $x$ values where the curve meets $y=0$.",
+     "concepts": [
+      "parabola"
+     ]
+    }
+   ],
+   "recap": {
+    "lines": [
+     "A parabola is the graph of a quadratic.",
+     "Roots are where $y=0$.",
+     "The discriminant counts the roots.",
+     "The formula comes from completing the square."
+    ],
+    "teach": "Draw a parabola with two roots and label roots, lowest point, y-intercept."
+   }
+  },
+  {
+   "id": "q3",
+   "title": "Calculus: slope and area",
+   "world": "1-3",
+   "minutes": 20,
+   "question": "How steep is a curve at one point, and how much area is under it?",
+   "previously": "You can read a curve's roots. Now we ask how fast it is changing.",
+   "outcomes": [
+    "Explain the derivative as a slope that a secant line approaches",
+    "Differentiate powers with a rule you understand",
+    "See an integral as a limit of rectangles",
+    "Evaluate a simple definite integral"
+   ],
+   "needs": [
+    "parabola"
+   ],
+   "steps": [
+    {
+     "type": "predict",
+     "prompt": "A car's average speed over a 2-hour trip is 60 km/h. Does that tell you its speed at exactly 1:17 pm? How could you get closer?",
+     "answer": "No: it only averages. Shrink the time window around 1:17 (say one minute, then one second) and the average gets closer to the exact speed. That shrinking window is the idea of a derivative."
+    },
+    {
+     "type": "idea",
+     "title": "Slope of a curve",
+     "teaches": [
+      "secant"
+     ],
+     "lines": [
+      "A straight line has one slope everywhere. A curve's slope changes from point to point.",
+      "Trick: pick two points on the curve and join them with a straight line (a **secant**). Its slope is easy: $\\frac{\\text{rise}}{\\text{run}}$.",
+      "Now slide the second point closer and closer to the first."
+     ],
+     "analogy": "A car's speedometer: average speed over a long trip is a secant slope. The speedometer reading right now is the tangent slope."
+    },
+    {
+     "type": "graph",
+     "title": "From secant to tangent for $f(x)=x^2$ at $x=1$",
+     "x": [
+      -0.5,
+      3.5
+     ],
+     "y": [
+      -1,
+      10
+     ],
+     "xlabel": "x",
+     "ylabel": "y",
+     "functions": [
+      {
+       "expr": "x*x",
+       "label": "f(x) = x^2"
+      }
+     ],
+     "points": [
+      {
+       "x": 1,
+       "y": 1,
+       "stage": 1,
+       "color": 0
+      }
+     ],
+     "secants": [
+      {
+       "fn": 0,
+       "a": 1,
+       "b": 3,
+       "stage": 1,
+       "label": "slope 4",
+       "color": 3
+      },
+      {
+       "fn": 0,
+       "a": 1,
+       "b": 2,
+       "stage": 2,
+       "label": "slope 3",
+       "color": 3
+      },
+      {
+       "fn": 0,
+       "a": 1,
+       "b": 1.5,
+       "stage": 3,
+       "label": "slope 2.5",
+       "color": 3
+      }
+     ],
+     "tangents": [
+      {
+       "fn": 0,
+       "at": 1,
+       "stage": 4,
+       "label": "slope 2",
+       "color": 1
+      }
+     ],
+     "captions": {
+      "1": "Second point at $x=3$. Slope $=\\frac{9-1}{3-1}=4$.",
+      "2": "Move it closer, $x=2$. Slope $=\\frac{4-1}{2-1}=3$.",
+      "3": "Closer again, $x=1.5$. Slope $=\\frac{2.25-1}{0.5}=2.5$.",
+      "4": "The slopes 4, 3, 2.5, ... head for **2**. The line touching at one point only is the **tangent**; its slope is the **derivative** $f'(1)=2$."
+     },
+     "keep": "Derivative = the number the secant slopes settle on as the second point slides in."
+    },
+    {
+     "type": "worked",
+     "title": "The derivative of $x^2$, from the definition",
+     "teaches": [
+      "derivative"
+     ],
+     "problem": "Find the slope of $f(x)=x^2$ at $x=1$ exactly, using $f'(1)=\\lim_{h\\to0}\\dfrac{f(1+h)-f(1)}{h}$.",
+     "steps": [
+      {
+       "label": "Name the second point",
+       "work": "$$\\text{second point at }x=1+h,\\qquad h=\\text{a small step}$$",
+       "why": "$h$ is how far we slide right. A secant needs two points; this gives the second."
+      },
+      {
+       "label": "Rise over run",
+       "work": "$$\\frac{f(1+h)-f(1)}{h}=\\frac{(1+h)^2-1}{h}$$",
+       "why": "Rise $=f(1+h)-f(1)$. Run $=(1+h)-1=h$."
+      },
+      {
+       "label": "Expand the square",
+       "work": "$$(1+h)^2=1+2h+h^2$$",
+       "why": "$(1+h)(1+h)$: multiply every term by every term."
+      },
+      {
+       "label": "Subtract 1",
+       "work": "$$\\frac{1+2h+h^2-1}{h}=\\frac{2h+h^2}{h}$$",
+       "why": "The +1 and -1 cancel. Everything left has an h."
+      },
+      {
+       "label": "Cancel h",
+       "work": "$$\\frac{\\cancel{h}(2+h)}{\\cancel{h}}=2+h$$",
+       "why": "Factor h out and cancel. We may because $h\\neq0$ while it is only 'very small'."
+      },
+      {
+       "label": "Let h shrink to 0",
+       "work": "$$\\lim_{h\\to0}(2+h)=2$$",
+       "why": "As $h\\to0$, the term $h$ vanishes. This matches the slopes 4, 3, 2.5, ... of the picture."
+      }
+     ],
+     "answer": "$f'(1)=2$",
+     "check": "At x = 1 the tangent in the graph rises 2 for every 1 step right."
+    },
+    {
+     "type": "decode",
+     "title": "The power rule",
+     "teaches": [
+      "power_rule"
+     ],
+     "intro": "Doing that limit every time is slow. The pattern is always the same:",
+     "tex": "\\dv{\\cA{x}^{\\cB{n}}}{x}=\\cB{n}\\,\\cA{x}^{\\cB{n}-1}",
+     "read": "The derivative of x to the n is n times x to the n minus 1.",
+     "parts": [
+      {
+       "sym": "$x$",
+       "name": "x: the variable",
+       "plain": "The input of the curve.",
+       "effect": "The result is a new function of x: the slope at each x."
+      },
+      {
+       "sym": "$n$",
+       "name": "n: the power",
+       "plain": "The exponent. For $x^2$, $n=2$.",
+       "effect": "It comes down in front, and the power drops by 1."
+      }
+     ],
+     "shortcut": "Bring the power down, subtract 1 from it. $x^2\\to2x^1=2x$. At $x=1$ that gives 2, matching the limit.",
+     "trap": "Forgetting to lower the power: the derivative of $x^3$ is $3x^2$, not $3x^3$."
+    },
+    {
+     "type": "quiz",
+     "ids": [
+      "a",
+      "b"
+     ]
+    },
+    {
+     "type": "graph",
+     "title": "Area under $y=x^2$ from 0 to 2",
+     "teaches": [
+      "integral"
+     ],
+     "x": [
+      -0.25,
+      2.5
+     ],
+     "y": [
+      -0.5,
+      5
+     ],
+     "xlabel": "x",
+     "ylabel": "y",
+     "functions": [
+      {
+       "expr": "x*x",
+       "label": "y = x^2"
+      }
+     ],
+     "shades": [
+      {
+       "fn": 0,
+       "from": 0,
+       "to": 2,
+       "n": 4,
+       "mode": "left",
+       "stage": 1,
+       "color": 1
+      },
+      {
+       "fn": 0,
+       "from": 0,
+       "to": 2,
+       "n": 16,
+       "mode": "left",
+       "stage": 2,
+       "color": 1
+      },
+      {
+       "fn": 0,
+       "from": 0,
+       "to": 2,
+       "stage": 3,
+       "color": 1,
+       "label": "area"
+      }
+     ],
+     "captions": {
+      "1": "Cut the area into 4 strips and use rectangles: left sum $=0.5(0^2+0.5^2+1^2+1.5^2)=1.75$, too small.",
+      "2": "16 thinner strips follow the curve more closely. The sum gets closer to the true area.",
+      "3": "With infinitely many strips the rectangles fill the region exactly. That limit is the **integral** $\\int_0^2 x^2\\,\\dd x$."
+     },
+     "keep": "Integral = the limit of rectangle areas as the strips get thinner."
+    },
+    {
+     "type": "worked",
+     "title": "Evaluate $\\int_0^2 x^2\\,\\dd x$",
+     "problem": "Find the exact area under $y=x^2$ from $x=0$ to $x=2$.",
+     "steps": [
+      {
+       "label": "Find an antiderivative",
+       "work": "$$F(x)=\\frac{x^3}{3}$$",
+       "why": "We need $F$ with $F'(x)=x^2$. By the power rule, $\\dv{(x^3/3)}{x}=\\frac{3x^2}{3}=x^2$."
+      },
+      {
+       "label": "Plug in the top and bottom",
+       "work": "$$\\int_0^2 x^2\\,\\dd x=\\eval{\\frac{x^3}{3}}{0}^{2}=\\frac{2^3}{3}-\\frac{0^3}{3}$$",
+       "why": "The area equals F(top) minus F(bottom)."
+      },
+      {
+       "label": "Simplify",
+       "work": "$$=\\frac{8}{3}-0=\\frac83\\approx2.67$$",
+       "why": "Compare with the left sum 1.75 for 4 strips: the exact area is a bit larger, as the picture showed."
+      }
+     ],
+     "answer": "$\\frac83$",
+     "needs": [
+      "power_rule",
+      "integral"
+     ]
+    },
+    {
+     "type": "solve",
+     "title": "Your turn 3",
+     "problem": "Find the slope of $f(x)=3x^4$ at $x=2$.",
+     "needs": [
+      "power_rule",
+      "derivative"
+     ],
+     "hints": [
+      "Differentiate first: power rule on $x^4$.",
+      "$f'(x)=3\\cdot4x^3$.",
+      "Then put x = 2 into the derivative."
+     ],
+     "steps": [
+      {
+       "label": "Differentiate",
+       "work": "$$f'(x)=3\\cdot4\\,x^{4-1}=12x^3$$",
+       "why": "The constant 3 stays; the power rule acts on $x^4$."
+      },
+      {
+       "label": "Evaluate at x = 2",
+       "work": "$$f'(2)=12\\cdot2^3=12\\cdot8=96$$",
+       "why": "$2^3=8$."
+      }
+     ],
+     "answer": "$f'(2)=96$"
+    }
+   ],
+   "quiz": [
+    {
+     "q": "What is $\\dv{x^5}{x}$?",
+     "answer": "$5x^4$",
+     "wrong": [
+      "$5x^5$",
+      "$x^4$",
+      "$4x^5$"
+     ],
+     "why": "Bring the 5 down, lower the power: $5x^4$.",
+     "concepts": [
+      "power_rule"
+     ],
+     "tag": "CHECK",
+     "id": "a"
+    },
+    {
+     "q": "As the second point slides toward the first, the secant slope approaches...",
+     "answer": "The tangent slope (the derivative)",
+     "wrong": [
+      "Zero",
+      "The y-value",
+      "Infinity"
+     ],
+     "why": "That limiting value is what we call the derivative.",
+     "concepts": [
+      "secant",
+      "derivative"
+     ],
+     "tag": "CHECK",
+     "id": "b"
+    },
+    {
+     "q": "The discriminant of $x^2+2x+5$ is...",
+     "answer": "$-16$",
+     "wrong": [
+      "$16$",
+      "$24$",
+      "$0$"
+     ],
+     "why": "$2^2-4(1)(5)=4-20=-16$. Negative: no real roots.",
+     "concepts": [
+      "discriminant"
+     ],
+     "tag": "CHECK",
+     "id": "c"
+    },
+    {
+     "q": "An integral $\\int_a^b f(x)\\,\\dd x$ is best pictured as...",
+     "answer": "The area under the curve from a to b",
+     "wrong": [
+      "The slope at b",
+      "The value f(b)",
+      "The average of a and b"
+     ],
+     "why": "Sum of thin rectangles in the limit.",
+     "concepts": [
+      "integral"
+     ],
+     "tag": "CHECK",
+     "id": "d"
+    }
+   ],
+   "cards": [
+    {
+     "front": "Power rule",
+     "back": "$\\dv{x^n}{x}=n\\,x^{n-1}$",
+     "concepts": [
+      "power_rule"
+     ]
+    },
+    {
+     "front": "Derivative, in words",
+     "back": "The slope of the curve at one point: the limit of secant slopes.",
+     "concepts": [
+      "derivative"
+     ]
+    },
+    {
+     "front": "Integral, in words",
+     "back": "The area under a curve: the limit of rectangle sums.",
+     "concepts": [
+      "integral"
+     ]
+    }
+   ],
+   "recap": {
+    "lines": [
+     "Secant slopes settle on the tangent slope: the derivative.",
+     "Power rule: $x^n\\to n\\,x^{n-1}$.",
+     "Integral = limit of rectangle areas.",
+     "Area $=F(\\text{top})-F(\\text{bottom})$."
+    ],
+    "teach": "Say in 30 seconds why a derivative is a limit of secant slopes."
+   }
+  },
+  {
+   "id": "q4",
+   "title": "Vectors and matrices",
+   "world": "1-4",
+   "minutes": 18,
+   "question": "How can a grid of numbers move, stretch and rotate pictures?",
+   "previously": "You solved for unknown numbers and read slopes. Now a whole table of numbers acts as one machine.",
+   "outcomes": [
+    "Say what a matrix does to the unit square",
+    "Multiply matrices entry by entry",
+    "Compute a 2 by 2 determinant and inverse",
+    "Catch the order-of-transpose mistake"
+   ],
+   "needs": [
+    "inverse_ops"
+   ],
+   "steps": [
+    {
+     "type": "predict",
+     "prompt": "Stretch a square sheet of rubber to twice its width, same height. By what factor does its area change?",
+     "answer": "Twice the area. A matrix that stretches x by 2 does exactly this, and its determinant (the area scale) is 2."
+    },
+    {
+     "type": "idea",
+     "title": "A matrix is a machine for moving points",
+     "teaches": [
+      "transform"
+     ],
+     "lines": [
+      "Write a point as a column $\\begin{pmatrix}x\\\\y\\end{pmatrix}$. A $2\\times2$ matrix turns it into a new point.",
+      "The **first column** says where the point $(1,0)$ lands. The **second column** says where $(0,1)$ lands.",
+      "Everything else follows, because every point is some amount of those two steps."
+     ],
+     "analogy": "Two arrows on graph paper, one right and one up. The matrix says where each arrow goes; the rest of the paper is dragged along."
+    },
+    {
+     "type": "lab",
+     "title": "Drag the matrix, watch the square",
+     "intro": "The grey square is the unit square. The blue shape is its image under $\\begin{pmatrix}a&b\\\\c&d\\end{pmatrix}$.",
+     "controls": [
+      {
+       "id": "a",
+       "label": "$a$ (first column, x)",
+       "min": -2,
+       "max": 2,
+       "step": 0.1,
+       "value": 1,
+       "fmt": "1"
+      },
+      {
+       "id": "c",
+       "label": "$c$ (first column, y)",
+       "min": -2,
+       "max": 2,
+       "step": 0.1,
+       "value": 0,
+       "fmt": "1"
+      },
+      {
+       "id": "b",
+       "label": "$b$ (second column, x)",
+       "min": -2,
+       "max": 2,
+       "step": 0.1,
+       "value": 0.5,
+       "fmt": "1"
+      },
+      {
+       "id": "d",
+       "label": "$d$ (second column, y)",
+       "min": -2,
+       "max": 2,
+       "step": 0.1,
+       "value": 1,
+       "fmt": "1"
+      }
+     ],
+     "outputs": [
+      {
+       "label": "Area scale $ad-bc$",
+       "expr": "a*d-b*c",
+       "fmt": "2"
+      },
+      {
+       "label": "Image of $(1,1)$: x",
+       "expr": "a+b",
+       "fmt": "1"
+      },
+      {
+       "label": "Image of $(1,1)$: y",
+       "expr": "c+d",
+       "fmt": "1"
+      }
+     ],
+     "svg": "<svg viewBox='0 0 400 400' width='100%'><line x1='0' y1='200' x2='400' y2='200' stroke='#999' stroke-width='1.5'/><line x1='200' y1='0' x2='200' y2='400' stroke='#999' stroke-width='1.5'/><polygon points='200,200 260,200 260,140 200,140' fill='#ccc' fill-opacity='.6' stroke='#555' stroke-width='2'/><polygon points='200,200 {{ 200+60*a }},{{ 200-60*c }} {{ 200+60*(a+b) }},{{ 200-60*(c+d) }} {{ 200+60*b }},{{ 200-60*d }}' fill='#2a9df4' fill-opacity='.45' stroke='#1769ab' stroke-width='3'/><circle cx='{{ 200+60*a }}' cy='{{ 200-60*c }}' r='6' fill='#e63946'/><circle cx='{{ 200+60*b }}' cy='{{ 200-60*d }}' r='6' fill='#1a9a5f'/></svg>",
+     "tries": [
+      "Set $a=0,\\,b=-1,\\,c=1,\\,d=0$: the square turns 90 degrees. The red dot is where $(1,0)$ lands, the green dot where $(0,1)$ lands.",
+      "Make the area scale $ad-bc$ equal 0: the square flattens into a line."
+     ],
+     "keep": "Red dot = first column. Green dot = second column. The area scale is the determinant."
+    },
+    {
+     "type": "decode",
+     "title": "Matrix times vector",
+     "teaches": [
+      "matmul"
+     ],
+     "tex": "\\begin{pmatrix}\\cA{a}&\\cB{b}\\\\ \\cC{c}&\\cD{d}\\end{pmatrix}\\begin{pmatrix}x\\\\ y\\end{pmatrix}=\\begin{pmatrix}\\cA{a}x+\\cB{b}y\\\\ \\cC{c}x+\\cD{d}y\\end{pmatrix}",
+     "read": "Each output entry is a row of the matrix times the column: multiply pairs, then add.",
+     "parts": [
+      {
+       "sym": "$a$",
+       "name": "top-left",
+       "plain": "Multiplies x in the new x.",
+       "effect": "Stretches left-right."
+      },
+      {
+       "sym": "$b$",
+       "name": "top-right",
+       "plain": "Multiplies y in the new x.",
+       "effect": "Shears sideways."
+      },
+      {
+       "sym": "$c$",
+       "name": "bottom-left",
+       "plain": "Multiplies x in the new y.",
+       "effect": "Shears up-down."
+      },
+      {
+       "sym": "$d$",
+       "name": "bottom-right",
+       "plain": "Multiplies y in the new y.",
+       "effect": "Stretches up-down."
+      }
+     ],
+     "trap": "Row times column, never column times column. The first row makes the first output."
+    },
+    {
+     "type": "worked",
+     "title": "Multiply two matrices, entry by entry",
+     "problem": "Compute $AB$ for $A=\\begin{pmatrix}1&2\\\\3&4\\end{pmatrix}$ and $B=\\begin{pmatrix}0&1\\\\1&0\\end{pmatrix}$.",
+     "steps": [
+      {
+       "label": "Top-left: row 1 of A, column 1 of B",
+       "work": "$$\\begin{pmatrix}1&2\\end{pmatrix}\\!\\begin{pmatrix}0\\\\1\\end{pmatrix}=1\\cdot0+2\\cdot1=2$$",
+       "why": "Multiply matching positions, then add."
+      },
+      {
+       "label": "Top-right: row 1, column 2",
+       "work": "$$\\begin{pmatrix}1&2\\end{pmatrix}\\!\\begin{pmatrix}1\\\\0\\end{pmatrix}=1\\cdot1+2\\cdot0=1$$",
+       "why": "Same row, next column."
+      },
+      {
+       "label": "Bottom-left: row 2, column 1",
+       "work": "$$\\begin{pmatrix}3&4\\end{pmatrix}\\!\\begin{pmatrix}0\\\\1\\end{pmatrix}=3\\cdot0+4\\cdot1=4$$",
+       "why": "Next row, first column."
+      },
+      {
+       "label": "Bottom-right: row 2, column 2",
+       "work": "$$\\begin{pmatrix}3&4\\end{pmatrix}\\!\\begin{pmatrix}1\\\\0\\end{pmatrix}=3\\cdot1+4\\cdot0=3$$",
+       "why": "Last entry."
+      },
+      {
+       "label": "Assemble",
+       "work": "$$AB=\\begin{pmatrix}2&1\\\\4&3\\end{pmatrix}$$",
+       "why": "Compare with A: its columns are swapped. B is the 'swap the columns' matrix."
+      }
+     ],
+     "answer": "$AB=\\begin{pmatrix}2&1\\\\4&3\\end{pmatrix}$",
+     "needs": [
+      "matmul"
+     ],
+     "shortcut": "Multiplying on the right by $B$ just rearranges the columns of $A$. Read the columns of $B$ as instructions: 'take column 2, then column 1'.",
+     "trap": "Matrix multiplication is not commutative: $AB\\neq BA$ in general."
+    },
+    {
+     "type": "worked",
+     "title": "Determinant and inverse of a 2 by 2",
+     "teaches": [
+      "det"
+     ],
+     "problem": "For $A=\\begin{pmatrix}2&1\\\\5&3\\end{pmatrix}$ find $\\det A$ and $A\\inv$.",
+     "steps": [
+      {
+       "label": "Determinant",
+       "work": "$$\\det A=ad-bc=2\\cdot3-1\\cdot5=1$$",
+       "why": "It is the area scale from the lab. Non-zero, so $A$ can be undone."
+      },
+      {
+       "label": "Swap and negate",
+       "work": "$$A\\inv=\\frac{1}{\\det A}\\begin{pmatrix}d&-b\\\\-c&a\\end{pmatrix}=\\frac11\\begin{pmatrix}3&-1\\\\-5&2\\end{pmatrix}$$",
+       "why": "Swap the diagonal entries, flip the sign of the other two, divide by the determinant."
+      },
+      {
+       "label": "Check A times its inverse",
+       "work": "$$\\begin{pmatrix}2&1\\\\5&3\\end{pmatrix}\\begin{pmatrix}3&-1\\\\-5&2\\end{pmatrix}=\\begin{pmatrix}6-5&-2+2\\\\15-15&-5+6\\end{pmatrix}=\\begin{pmatrix}1&0\\\\0&1\\end{pmatrix}$$",
+       "why": "The identity matrix means the inverse undoes A."
+      }
+     ],
+     "answer": "$A\\inv=\\begin{pmatrix}3&-1\\\\-5&2\\end{pmatrix}$"
+    },
+    {
+     "type": "quiz",
+     "ids": [
+      "a",
+      "b"
+     ]
+    },
+    {
+     "type": "spot",
+     "title": "Find the mistake",
+     "problem": "$A$ is $2\\times3$ and $B$ is $3\\times2$. Simplify $(AB)\\T$.",
+     "steps": [
+      {
+       "label": "Line 1",
+       "work": "$$AB\\text{ is }2\\times2,\\text{ so }(AB)\\T\\text{ is }2\\times2$$",
+       "why": "Inner sizes match (3 and 3); the result takes the outer sizes 2 and 2."
+      },
+      {
+       "label": "Line 2",
+       "work": "$$(AB)\\T=A\\T B\\T$$",
+       "wrong": true,
+       "mistake": "Transposing a product REVERSES the order. Think of socks and shoes: to undo putting on socks then shoes, take off the shoes first.",
+       "fix": "$$(AB)\\T=B\\T A\\T$$"
+      },
+      {
+       "label": "Line 3",
+       "work": "$$A\\T\\text{ is }3\\times2,\\; B\\T\\text{ is }2\\times3,\\text{ so }A\\T B\\T\\text{ is }3\\times3$$",
+       "why": "True, and it exposes the error: $(AB)\\T$ is $2\\times2$, so it cannot equal a $3\\times3$ matrix. A size check catches it."
+      }
+     ],
+     "answer": "$(AB)\\T=B\\T A\\T$, a $2\\times2$ matrix.",
+     "lesson": "Always size-check a matrix identity. A mismatch means the order is wrong."
+    },
+    {
+     "type": "solve",
+     "title": "Your turn 4",
+     "problem": "Rotate the point $(2,3)$ by 90 degrees using $R=\\begin{pmatrix}0&-1\\\\1&0\\end{pmatrix}$.",
+     "needs": [
+      "matmul",
+      "transform"
+     ],
+     "hints": [
+      "Compute $R\\begin{pmatrix}2\\\\3\\end{pmatrix}$: row times column.",
+      "Top: 0 times 2 plus -1 times 3.",
+      "Bottom: 1 times 2 plus 0 times 3."
+     ],
+     "steps": [
+      {
+       "label": "Top entry",
+       "work": "$$0\\cdot2+(-1)\\cdot3=-3$$",
+       "why": "Row 1 of R against the column."
+      },
+      {
+       "label": "Bottom entry",
+       "work": "$$1\\cdot2+0\\cdot3=2$$",
+       "why": "Row 2 of R against the column."
+      },
+      {
+       "label": "Result",
+       "work": "$$R\\begin{pmatrix}2\\\\3\\end{pmatrix}=\\begin{pmatrix}-3\\\\2\\end{pmatrix}$$",
+       "why": "The point moved a quarter turn anticlockwise, as the lab showed."
+      }
+     ],
+     "answer": "$(-3,\\,2)$"
+    }
+   ],
+   "quiz": [
+    {
+     "q": "In a 2 by 2 matrix, the FIRST column tells you...",
+     "answer": "Where the point (1, 0) lands",
+     "wrong": [
+      "The determinant",
+      "The inverse",
+      "Where (0, 0) lands"
+     ],
+     "why": "Columns are the images of the unit steps.",
+     "concepts": [
+      "transform"
+     ],
+     "tag": "CHECK",
+     "id": "a"
+    },
+    {
+     "q": "$\\det\\begin{pmatrix}3&1\\\\4&2\\end{pmatrix}=$",
+     "answer": "2",
+     "wrong": [
+      "10",
+      "-2",
+      "5"
+     ],
+     "why": "$ad-bc=3\\cdot2-1\\cdot4=2$.",
+     "concepts": [
+      "det"
+     ],
+     "tag": "CHECK",
+     "id": "b"
+    },
+    {
+     "q": "What is the slope of $f(x)=x^3$ at $x=1$?",
+     "answer": "3",
+     "wrong": [
+      "1",
+      "2",
+      "0"
+     ],
+     "why": "Power rule: $3x^2$, at $x=1$ gives 3.",
+     "concepts": [
+      "power_rule"
+     ],
+     "tag": "CHECK",
+     "id": "c"
+    }
+   ],
+   "cards": [
+    {
+     "front": "$\\det\\begin{pmatrix}a&b\\\\c&d\\end{pmatrix}$",
+     "back": "$ad-bc$. The area scale factor.",
+     "concepts": [
+      "det"
+     ]
+    },
+    {
+     "front": "Matrix times vector, one rule",
+     "back": "Each output entry = a row of the matrix times the column: multiply pairs, add.",
+     "concepts": [
+      "matmul"
+     ]
+    },
+    {
+     "front": "$(AB)\\T=\\;?$",
+     "back": "$B\\T A\\T$. The order reverses.",
+     "concepts": [
+      "matmul"
+     ]
+    }
+   ],
+   "recap": {
+    "lines": [
+     "Columns of a matrix = where the unit steps land.",
+     "Multiply: row against column.",
+     "$\\det=ad-bc$ is the area scale; zero means the plane is flattened.",
+     "Size-check identities."
+    ],
+    "teach": "Describe what the matrix with columns (0,1) and (-1,0) does."
+   }
+  },
+  {
+   "id": "q5",
+   "title": "Probability, proof and the bell curve",
+   "world": "1-5",
+   "minutes": 20,
+   "question": "How do you update a belief after evidence, and how do you KNOW a rule is always true?",
+   "previously": "You can compute and transform. Now you decide how sure to be, and prove things.",
+   "outcomes": [
+    "Use Bayes' rule with natural frequencies",
+    "Follow a proof by cases and by induction",
+    "Read the 68-95 rule off a bell curve",
+    "Count choices with a binomial coefficient"
+   ],
+   "needs": [
+    "derivative"
+   ],
+   "steps": [
+    {
+     "type": "predict",
+     "prompt": "A medical test catches 90% of ill people, and 1 person in 100 is ill. You test positive. Is the chance you are ill about 90%, 50% or 15%? Guess before you calculate.",
+     "answer": "About 15%. Most people guess 90%. We will see why in the next few screens."
+    },
+    {
+     "type": "decode",
+     "title": "Bayes' rule",
+     "teaches": [
+      "bayes"
+     ],
+     "intro": "How likely is a hypothesis H after you see evidence E?",
+     "tex": "\\Pr(\\cA{H}\\given \\cB{E})=\\frac{\\Pr(\\cB{E}\\given \\cA{H})\\,\\Pr(\\cA{H})}{\\Pr(\\cB{E})}",
+     "read": "The probability of H given E equals the probability of E given H, times the prior probability of H, divided by the probability of E.",
+     "parts": [
+      {
+       "sym": "$H$",
+       "name": "H: the hypothesis",
+       "plain": "The thing you want to know, e.g. 'the person is ill'.",
+       "effect": "Pr(H) is your belief BEFORE the evidence (the prior)."
+      },
+      {
+       "sym": "$E$",
+       "name": "E: the evidence",
+       "plain": "What you observed, e.g. 'the test is positive'.",
+       "effect": "Pr(E) is how common the evidence is overall."
+      }
+     ],
+     "trap": "Mixing up $\\Pr(H\\given E)$ with $\\Pr(E\\given H)$. A test that catches 90% of the ill does not mean 90% of positives are ill."
+    },
+    {
+     "type": "worked",
+     "title": "A positive test: how worried should you be?",
+     "needs": [
+      "bayes"
+     ],
+     "problem": "1% of people have a condition. The test is positive for 90% of ill people and also for 5% of healthy people. You test positive. Probability you are ill?",
+     "steps": [
+      {
+       "label": "Imagine 1000 people",
+       "work": "$$1000\\times1\\%=10\\text{ ill},\\qquad 990\\text{ healthy}$$",
+       "why": "Whole people are easier to picture than percentages (natural frequencies)."
+      },
+      {
+       "label": "Who tests positive?",
+       "work": [
+        "$$\\text{ill and positive: }10\\times0.90=9$$",
+        "$$\\text{healthy and positive: }990\\times0.05=49.5$$"
+       ],
+       "why": "Apply each test rate to its own group."
+      },
+      {
+       "label": "Positives in total",
+       "work": "$$9+49.5=58.5$$",
+       "why": "This is $\\Pr(E)$ counted in people."
+      },
+      {
+       "label": "Fraction of positives who are ill",
+       "work": "$$\\Pr(H\\given E)=\\frac{9}{58.5}\\approx0.154$$",
+       "why": "Of everyone who tests positive, only 9 are really ill."
+      }
+     ],
+     "answer": "About $15\\%$, not $90\\%$.",
+     "intuition": "The condition is rare, so false alarms from the large healthy group swamp the true positives.",
+     "check": "The answer must be below 100% and, with a rare condition, far below the test's 90% rate."
+    },
+    {
+     "type": "proof",
+     "kind": "cases",
+     "title": "Prove $|x|\\geq x$",
+     "given": "$|x|=\\begin{cases}x&x\\ge0\\\\-x&x<0\\end{cases}$",
+     "claim": "$|x|\\ge x$ for every real number $x$",
+     "plan": "A number is either not negative or negative. Check the claim in each case.",
+     "steps": [
+      {
+       "label": "Case 1: $x\\ge0$",
+       "work": "$$|x|=x\\quad\\Rightarrow\\quad|x|\\ge x$$",
+       "reason": "By the definition, the first line applies, and a number is equal to itself."
+      },
+      {
+       "label": "Case 2: $x<0$",
+       "work": "$$|x|=-x>0>x\\quad\\Rightarrow\\quad|x|>x$$",
+       "reason": "By the definition, $|x|=-x$. Since $x$ is negative, $-x$ is positive, and positive numbers exceed negative ones."
+      }
+     ],
+     "conclusion": "Every real number falls in one of the two cases, and both give the claim.",
+     "keep": "Proof by cases: split into cases that cover everything, then prove each."
+    },
+    {
+     "type": "proof",
+     "kind": "induction",
+     "title": "The first n odd numbers add up to n squared",
+     "teaches": [
+      "induction"
+     ],
+     "claim": "$\\displaystyle\\sum_{i=1}^{n}(2i-1)=1+3+5+\\cdots+(2n-1)=n^2$ for every integer $n\\ge1$",
+     "plan": "Like dominoes: show the first falls, then show that any domino that falls knocks over the next.",
+     "steps": [
+      {
+       "label": "Base case, n = 1",
+       "work": "$$\\text{left}=1,\\qquad\\text{right}=1^2=1\\;\\checkmark$$",
+       "reason": "The first domino falls: the claim holds for n = 1."
+      },
+      {
+       "label": "Assume it for n = k",
+       "work": "$$1+3+\\cdots+(2k-1)=k^2$$",
+       "reason": "Induction hypothesis: suppose domino k has fallen."
+      },
+      {
+       "label": "Add the next odd number",
+       "work": "$$1+3+\\cdots+(2k-1)+(2k+1)=k^2+(2k+1)$$",
+       "reason": "Add the same thing, $2k+1$, to both sides of the hypothesis."
+      },
+      {
+       "label": "Recognise a square",
+       "work": "$$k^2+2k+1=(k+1)^2$$",
+       "reason": "$(k+1)(k+1)=k^2+k+k+1$."
+      },
+      {
+       "label": "That is the claim for k + 1",
+       "work": "$$1+3+\\cdots+(2(k+1)-1)=(k+1)^2$$",
+       "reason": "Domino k+1 falls whenever domino k does."
+      }
+     ],
+     "conclusion": "The first domino falls and each knocks over the next, so the claim holds for every n.",
+     "trap": "Skipping the base case. Without a first fallen domino, nothing falls."
+    },
+    {
+     "type": "quiz",
+     "ids": [
+      "a",
+      "b"
+     ]
+    },
+    {
+     "type": "graph",
+     "title": "The bell curve and the 68-95 rule",
+     "teaches": [
+      "normal"
+     ],
+     "x": [
+      -4,
+      4
+     ],
+     "y": [
+      0,
+      0.5
+     ],
+     "xlabel": "standard deviations from the mean",
+     "ylabel": "density",
+     "params": {
+      "mu": 0,
+      "sigma": 1
+     },
+     "functions": [
+      {
+       "expr": "exp(-(x-mu)*(x-mu)/(2*sigma*sigma))/(sigma*sqrt(2*PI))",
+       "label": "normal curve"
+      }
+     ],
+     "shades": [
+      {
+       "fn": 0,
+       "from": -2,
+       "to": 2,
+       "stage": 2,
+       "color": 1,
+       "label": "95%"
+      },
+      {
+       "fn": 0,
+       "from": -1,
+       "to": 1,
+       "stage": 1,
+       "color": 0,
+       "label": "68%"
+      }
+     ],
+     "vlines": [
+      {
+       "x": 0,
+       "stage": 1,
+       "label": "mean"
+      }
+     ],
+     "captions": {
+      "1": "About **68%** of values fall within 1 standard deviation $\\sigma$ of the mean $\\mu$.",
+      "2": "About **95%** fall within $2\\sigma$. Only 5% are further out."
+     },
+     "intuition": "The curve is the density: area = probability. The total area is 1.",
+     "keep": "Density: $f(x)=\\frac{1}{\\sigma\\sqrt{2\\pi}}e^{-(x-\\mu)^2/2\\sigma^2}$. Big $\\sigma$ = wide, low bell."
+    },
+    {
+     "type": "solve",
+     "title": "Your turn 5",
+     "problem": "A club must choose 2 of 5 people for a team. How many different pairs are possible?",
+     "needs": [
+      "induction"
+     ],
+     "hints": [
+      "Order does not matter, so use $\\binom{5}{2}=\\dfrac{5!}{2!\\,3!}$.",
+      "Write $5!=5\\cdot4\\cdot3!$ and cancel the $3!$."
+     ],
+     "steps": [
+      {
+       "label": "Write the coefficient",
+       "work": "$$\\binom52=\\frac{5!}{2!\\,3!}$$",
+       "why": "$\\binom{n}{k}=\\frac{n!}{k!(n-k)!}$ counts ways to choose k of n."
+      },
+      {
+       "label": "Cancel",
+       "work": "$$\\frac{5\\cdot4\\cdot\\cancel{3!}}{2!\\cdot\\cancel{3!}}=\\frac{20}{2}=10$$",
+       "why": "$5!=5\\cdot4\\cdot3!$, so the $3!$ appears top and bottom."
+      }
+     ],
+     "answer": "10 pairs"
+    }
+   ],
+   "quiz": [
+    {
+     "q": "1000 people, 1% ill. Test: 90% of ill and 5% of healthy test positive. Roughly how many positives are ill?",
+     "answer": "9 of about 59",
+     "wrong": [
+      "900 of 1000",
+      "10 of 20",
+      "1 of 100"
+     ],
+     "why": "9 ill positives against 49.5 healthy positives.",
+     "concepts": [
+      "bayes"
+     ],
+     "tag": "CHECK",
+     "id": "a"
+    },
+    {
+     "q": "In an induction proof, what is the 'base case' for?",
+     "answer": "To show the first statement is true",
+     "wrong": [
+      "To prove the last statement",
+      "To assume the result",
+      "To check the answer numerically"
+     ],
+     "why": "Without a true first domino, the chain never starts.",
+     "concepts": [
+      "induction"
+     ],
+     "tag": "CHECK",
+     "id": "b"
+    },
+    {
+     "q": "About what share of a normal distribution lies within $2\\sigma$ of the mean?",
+     "answer": "95%",
+     "wrong": [
+      "68%",
+      "50%",
+      "99.9%"
+     ],
+     "why": "The 68-95-99.7 rule: 95% lies within two standard deviations. 68% is only one standard deviation; 99.7% is three.",
+     "concepts": [
+      "normal"
+     ],
+     "tag": "CHECK",
+     "id": "c"
+    },
+    {
+     "q": "What is the slope of $f(x)=4x^2$ at $x=3$?",
+     "answer": "24",
+     "wrong": [
+      "12",
+      "36",
+      "8"
+     ],
+     "why": "$f'(x)=8x$, so $f'(3)=24$.",
+     "concepts": [
+      "derivative",
+      "power_rule"
+     ],
+     "tag": "CHECK",
+     "id": "d"
+    }
+   ],
+   "cards": [
+    {
+     "front": "Bayes' rule",
+     "back": "$\\Pr(H\\given E)=\\dfrac{\\Pr(E\\given H)\\Pr(H)}{\\Pr(E)}$",
+     "concepts": [
+      "bayes"
+     ]
+    },
+    {
+     "front": "Induction in two sentences",
+     "back": "Show the first case. Show that if case k holds, case k+1 holds.",
+     "concepts": [
+      "induction"
+     ]
+    },
+    {
+     "front": "68-95 rule",
+     "back": "68% within $1\\sigma$, 95% within $2\\sigma$.",
+     "concepts": [
+      "normal"
+     ]
+    }
+   ],
+   "recap": {
+    "lines": [
+     "Bayes: update with natural frequencies.",
+     "Proofs: cases cover everything; induction = dominoes.",
+     "Normal: 68% within 1 sigma, 95% within 2 sigma."
+    ],
+    "teach": "Explain why a positive test for a rare condition is often a false alarm."
+   }
+  },
+  {
+   "id": "q6",
+   "title": "Capstone: mixed problems",
+   "world": "1-6",
+   "minutes": 16,
+   "question": "Can you pick the right tool when nobody tells you which one?",
+   "previously": "Five tools: equations, quadratics, calculus, matrices, probability. Now they arrive mixed.",
+   "outcomes": [
+    "Choose a strategy before computing",
+    "Show every line with its reason",
+    "Check each answer"
+   ],
+   "needs": [
+    "strategies",
+    "quad_formula",
+    "integral",
+    "det"
+   ],
+   "steps": [
+    {
+     "type": "predict",
+     "prompt": "Before solving $4(x-1)=2(x-1)+10$: which strategy is faster, opening the brackets or treating $(x-1)$ as one block?",
+     "answer": "The block. $(x-1)$ appears on both sides, so subtract $2(x-1)$ and you are left with $2(x-1)=10$."
+    },
+    {
+     "type": "solve",
+     "title": "Mixed 1: equation",
+     "problem": "Solve $4(x-1)=2(x-1)+10$.",
+     "needs": [
+      "strategies",
+      "inverse_ops",
+      "balance"
+     ],
+     "hints": [
+      "Spot the repeated block $(x-1)$.",
+      "Subtract $2(x-1)$ from both sides.",
+      "You get $2(x-1)=10$."
+     ],
+     "steps": [
+      {
+       "label": "Treat (x-1) as a block",
+       "work": [
+        "$$4(x-1)-\\hl{2(x-1)}=2(x-1)+10-\\hl{2(x-1)}$$",
+        "$$2(x-1)=10$$"
+       ],
+       "why": "The block appears on both sides, so subtract it once."
+      },
+      {
+       "label": "Undo the times 2",
+       "work": [
+        "$$x-1=5$$"
+       ],
+       "why": "Divide both sides by 2."
+      },
+      {
+       "label": "Undo the minus 1",
+       "work": [
+        "$$x=6$$"
+       ],
+       "why": "Add 1 to both sides."
+      },
+      {
+       "label": "Check",
+       "work": "$$4(5)=20,\\qquad 2(5)+10=20\\;\\checkmark$$",
+       "why": "Both sides agree."
+      }
+     ],
+     "answer": "$x=6$"
+    },
+    {
+     "type": "solve",
+     "title": "Mixed 2: when does it land?",
+     "problem": "A ball's height in metres is $h=-t^2+4t+5$. At what time $t>0$ does it hit the ground ($h=0$)?",
+     "needs": [
+      "parabola",
+      "quad_formula",
+      "discriminant"
+     ],
+     "hints": [
+      "Set $h=0$ and multiply by $-1$ to make $a=1$.",
+      "$t^2-4t-5=0$: $a=1,\\,b=-4,\\,c=-5$.",
+      "Reject the negative time."
+     ],
+     "steps": [
+      {
+       "label": "Set h = 0",
+       "work": [
+        "$$-t^2+4t+5=0\\;\\Rightarrow\\;t^2-4t-5=0$$"
+       ],
+       "why": "Multiplying both sides by -1 keeps the balance and makes a = 1."
+      },
+      {
+       "label": "Discriminant",
+       "work": [
+        "$$(-4)^2-4(1)(-5)=16+20=36$$"
+       ],
+       "why": "Positive, so two roots."
+      },
+      {
+       "label": "Roots",
+       "work": [
+        "$$t=\\frac{4\\pm6}{2}\\;\\Rightarrow\\;t=5\\text{ or }t=-1$$"
+       ],
+       "why": "Plus and minus each give one root."
+      },
+      {
+       "label": "Choose the sensible one",
+       "work": [
+        "$$t=5\\text{ seconds}$$"
+       ],
+       "why": "A negative time is before the throw, so it does not apply."
+      }
+     ],
+     "answer": "$t=5$ seconds"
+    },
+    {
+     "type": "solve",
+     "title": "Mixed 3: area",
+     "problem": "Find the area under $y=x^2$ from $x=0$ to $x=3$.",
+     "needs": [
+      "integral",
+      "power_rule",
+      "secant",
+      "derivative"
+     ],
+     "hints": [
+      "Antiderivative of $x^2$ is $\\frac{x^3}{3}$.",
+      "Top minus bottom."
+     ],
+     "steps": [
+      {
+       "label": "Antiderivative",
+       "work": "$$F(x)=\\frac{x^3}{3}$$",
+       "why": "Its derivative is x squared (power rule backwards)."
+      },
+      {
+       "label": "Top minus bottom",
+       "work": "$$\\frac{3^3}{3}-\\frac{0^3}{3}=9-0=9$$",
+       "why": "Area = F(3) - F(0)."
+      }
+     ],
+     "answer": "9"
+    },
+    {
+     "type": "solve",
+     "title": "Mixed 4: matrix",
+     "problem": "$S=\\begin{pmatrix}2&0\\\\0&3\\end{pmatrix}$. Where do $(1,0)$ and $(0,1)$ land, and by what factor does area change?",
+     "needs": [
+      "transform",
+      "matmul",
+      "det"
+     ],
+     "hints": [
+      "The columns of S are the images of the unit steps.",
+      "Determinant = ad - bc."
+     ],
+     "steps": [
+      {
+       "label": "Read the columns",
+       "work": "$$(1,0)\\to(2,0),\\qquad(0,1)\\to(0,3)$$",
+       "why": "First column = image of (1,0); second column = image of (0,1)."
+      },
+      {
+       "label": "Determinant",
+       "work": "$$\\det S=2\\cdot3-0\\cdot0=6$$",
+       "why": "The unit square (area 1) becomes a 2 by 3 rectangle (area 6)."
+      }
+     ],
+     "answer": "Stretch x by 2 and y by 3; area scales by 6."
+    },
+    {
+     "type": "quiz",
+     "ids": [
+      "a",
+      "b",
+      "c",
+      "d",
+      "e",
+      "f",
+      "g"
+     ]
+    }
+   ],
+   "quiz": [
+    {
+     "q": "$6(a+1)=4(a+1)+8$. What is the cleverest first move?",
+     "answer": "Subtract $4(a+1)$ from both sides",
+     "wrong": [
+      "Open every bracket",
+      "Divide by 6",
+      "Guess a = 3"
+     ],
+     "why": "The block (a+1) is on both sides. Opening brackets also works but takes more lines.",
+     "concepts": [
+      "strategies",
+      "balance"
+     ],
+     "tag": "CHECK",
+     "id": "a"
+    },
+    {
+     "q": "The parabola $y=x^2+1$ ... crosses the x-axis how many times?",
+     "answer": "Never",
+     "wrong": [
+      "Once",
+      "Twice",
+      "Three times"
+     ],
+     "why": "Discriminant $0-4=-4<0$, and the curve never drops below $y=1$.",
+     "concepts": [
+      "parabola",
+      "discriminant",
+      "quad_formula"
+     ],
+     "tag": "CHECK",
+     "id": "b"
+    },
+    {
+     "q": "The area under $y=2x$ from 0 to 3 is...",
+     "answer": "9",
+     "wrong": [
+      "6",
+      "3",
+      "18"
+     ],
+     "why": "Antiderivative $x^2$: $3^2-0^2=9$. It is also a triangle: $\\frac12\\cdot3\\cdot6=9$.",
+     "concepts": [
+      "integral",
+      "power_rule"
+     ],
+     "tag": "CHECK",
+     "id": "c"
+    },
+    {
+     "q": "A matrix with $\\det=0$ ...",
+     "answer": "Flattens the plane onto a line",
+     "wrong": [
+      "Doubles all areas",
+      "Cannot multiply",
+      "Is the identity"
+     ],
+     "why": "Area scale 0 means every shape collapses; there is no inverse.",
+     "concepts": [
+      "det",
+      "transform"
+     ],
+     "tag": "CHECK",
+     "id": "d"
+    },
+    {
+     "q": "A test is positive for 99% of ill people, but the condition affects 1 in 10,000. A positive result mostly means...",
+     "answer": "A false alarm is still more likely than being ill",
+     "wrong": [
+      "You are almost certainly ill",
+      "The test is useless",
+      "The prior does not matter"
+     ],
+     "why": "With a tiny prior, healthy people far outnumber ill ones, so false positives dominate (Bayes' rule).",
+     "concepts": [
+      "bayes"
+     ],
+     "tag": "CHECK",
+     "id": "e"
+    },
+    {
+     "q": "In a proof by induction, the step 'if it holds for k, it holds for k + 1' alone is not enough because...",
+     "answer": "Nothing says the first case is true",
+     "wrong": [
+      "It is too long",
+      "k + 1 is not allowed",
+      "It only works for even numbers"
+     ],
+     "why": "The base case starts the chain; the step passes it along.",
+     "concepts": [
+      "induction"
+     ],
+     "tag": "CHECK",
+     "id": "f"
+    },
+    {
+     "q": "Values are normally distributed with mean 100 and $\\sigma=10$. About 95% lie between...",
+     "answer": "80 and 120",
+     "wrong": [
+      "90 and 110",
+      "70 and 130",
+      "95 and 105"
+     ],
+     "why": "95% lies within $2\\sigma$: $100\\pm20$. 90 to 110 is only $1\\sigma$ (68%); 70 to 130 is $3\\sigma$.",
+     "concepts": [
+      "normal"
+     ],
+     "tag": "CHECK",
+     "id": "g"
+    }
+   ],
+   "cards": [
+    {
+     "front": "Order of attack on a new problem",
+     "back": "Name the topic, write what is known, pick the tool, do it line by line with reasons, check.",
+     "concepts": [
+      "strategies"
+     ]
+    },
+    {
+     "front": "Area under $x^2$ from 0 to $b$",
+     "back": "$\\dfrac{b^3}{3}$",
+     "concepts": [
+      "integral"
+     ]
+    }
+   ],
+   "recap": {
+    "lines": [
+     "Pick the strategy first.",
+     "Line by line, each with a reason.",
+     "Always check."
+    ],
+    "teach": "Pick one problem from this course and teach its solution out loud."
+   }
+  }
+ ]
+}

@@ -119,7 +119,7 @@ The game is responsive: one column, thumb-sized buttons, swipe left for next and
 Needs Python 3 (developed and tested on 3.11). `build.py` and `validate.py` use only the standard library.
 
 ```bash
-python skills/gamify-learn/scripts/validate.py my-course.json --strict   # errors, one-direction ledger, teaching warnings
+python skills/gamify-learn/scripts/validate.py my-course.json --strict   # errors, one-direction ledger, teaching warnings (formulas pre-rendered if Node.js is installed)
 python skills/gamify-learn/scripts/build.py my-course.json -o my-course.html
 python skills/gamify-learn/scripts/smoke_test.py my-course.html          # needs Chrome, Chromium or Edge
 python skills/gamify-learn/scripts/extract_text.py slides.pptx -o extracted   # pip install pypdf python-pptx python-docx
@@ -135,7 +135,7 @@ source ─► extract ─► prerequisite map ─► ordered quests ─► cours
                       what needs what)    per quest)        needs / tags)     3+ relearnings each)     file, tested)
 ```
 
-Step types: `predict` · `idea` · `decode` · `flow` · `compare` · `worked` · `lab` · `solve` · `figure` · `dump` · `html`, plus tagged quizzes and flashcards, and an automatic mission, warm-up and recap per quest.
+Step types: `predict` · `idea` · `decode` · `flow` · `compare` · `worked` · `lab` · `solve` · `figure` · `dump` · `code` · `proof` · `graph` · `spot` · `html`, plus tagged quizzes and flashcards, and an automatic mission, warm-up and recap per quest.
 
 ## Repo layout
 
@@ -146,11 +146,24 @@ skills/gamify-learn/
   assets/engine/            engine.js, engine.css, template.html
   assets/fonts/             Press Start 2P + VT323 (SIL OFL 1.1)
   references/               learning-line, authoring-guide, schema, evidence
+  assets/katex/             KaTeX 0.16.11 (MIT), inlined only when a course uses maths
   examples/compound-interest/
+  examples/math-showcase/   six-quest maths demo (graphs, proofs, matrices, spot-the-mistake)
 .claude-plugin/             plugin + marketplace manifests
 docs/PHONE.md               how to use a game on iPhone and Android
 tools/package.py            builds dist/gamify-learn.skill
 ```
+
+## What is new in v1.5 (Math teaching update)
+
+Slides that show a formula and move on do not teach it. V1.5 makes any maths teachable from zero.
+
+- **Typeset maths, offline.** `$...$` and `$$...$$` are drawn by KaTeX (v0.16.11, inlined only into courses that use maths, fonts included). Matrices in full form, fractions, powers, sums, integrals, `aligned`, `cases`, `\cancel`, `\underbrace`. Wide formulas shrink to fit a phone, then scroll. Short macros: `\R`, `\abs{x}`, `\norm{v}`, `\dv{f}{x}`, `\pdv{f}{x}`, `\Var`, `A\T`, `A\inv`, `\hl{..}` and so on.
+- **Every step says WHY.** `worked` and `solve` steps are `label + working + why`, with `intuition`, `shortcut` and `sanity check` callouts. A `decode` step takes a typeset formula whose colours match the symbol cards.
+- **New step types.** `proof` (claim, plan, every line with its reason; direct, cases, induction, derivation), `graph` (curves, points, secants, tangents, shaded areas, Riemann rectangles, built stage by stage with a caption each) and `spot` (find the planted mistake in a worked solution).
+- **Broken formulas are caught at build time.** With Node.js installed, `validate.py` renders every formula and every graph/lab expression with the shipped KaTeX and reports the exact reason and place (`scripts/math_check.py`). It also rejects `^` in expressions (XOR in JavaScript) and warns when maths is written as plain text.
+- **The teaching rules.** [`references/math-teaching.md`](skills/gamify-learn/references/math-teaching.md): what the research says (worked examples, fading, split attention, self-explanation, concreteness fading, proof self-explanation, solved-problem analysis, spacing) with honest limits, which step type to use for which kind of maths, and recipes for algebra, graphs, calculus, linear algebra, probability, proofs and counting.
+- **A demo that uses all of it:** [`examples/math-showcase/`](skills/gamify-learn/examples/math-showcase/math-showcase.html), six quests: equations, quadratics, calculus graphs, matrices, probability and proofs, plus a mixed capstone.
 
 ## What is new in v1.4 (bug fixes)
 

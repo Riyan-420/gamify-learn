@@ -6,7 +6,7 @@ const TH=window.__THEME||{};   /* optional theme pack (themes/<name>/theme.js): 
 const PL=Object.assign({grid:'#c4e8ff',axis:'#40527a',ink:'#12213f',series:['#e63946','#1f7fd1','#12213f'],at:'#e63946',bw:3,mw:3,lw:4,font:'monospace',conf:['#e63946','#2a9df4','#ffd23f','#fff','#12213f']},TH.palette||{});
 const SLUG=(D.slug||D.title||'course').toString().toLowerCase().replace(/[^a-z0-9]+/g,'-').slice(0,40);
 const KEY='gamify_learn_'+SLUG+'_v1';
-let S={xp:0,streak:0,last:'',ans:{},cards:{},done:{},dumps:{},hooks:{},badges:{},calm:false,sfx:false,tmin:D.focus_minutes||15,combo:0,best:0,raids:0,seen:false,solves:{},unlockAll:false,pos:{},rv:{},wu:{},cd:{},swipe:true,lastq:null};
+let S={xp:0,streak:0,last:'',ans:{},cards:{},done:{},dumps:{},hooks:{},badges:{},calm:false,sfx:false,tmin:D.focus_minutes||15,combo:0,best:0,raids:0,seen:false,solves:{},spot:{},unlockAll:false,pos:{},rv:{},wu:{},cd:{},swipe:true,lastq:null};
 try{Object.assign(S,JSON.parse(localStorage.getItem(KEY)||'{}'))}catch(e){}
 const save=()=>{try{localStorage.setItem(KEY,JSON.stringify(S))}catch(e){}};
 const $=(el,q)=>el.querySelector(q), $$=(el,q)=>[...el.querySelectorAll(q)];
@@ -17,14 +17,45 @@ const today=()=>ymd(new Date());
 const addDays=n=>{const d=new Date();d.setDate(d.getDate()+n);return ymd(d)};
 const dnum=s=>Math.floor(new Date(s+'T00:00:00').getTime()/864e5);
 const shuffle=a=>{a=a.slice();for(let i=a.length-1;i>0;i--){const j=Math.floor(Math.random()*(i+1));[a[i],a[j]]=[a[j],a[i]]}return a};
+/* math: $...$ inline and $$...$$ display, drawn by KaTeX (build.py inlines KaTeX only when a course uses math).
+   Colour macros: \cA{..} to \cF{..} use the same six colours as the decode step; \hl{..} highlights. */
+const MJ=[null,null];
+function mathMacros(dark){
+  const k=dark?1:0;if(MJ[k])return MJ[k];
+  const probe=document.createElement('div');probe.className=dark?'fbox':'';probe.style.cssText='position:absolute;visibility:hidden;left:-999px';document.body.appendChild(probe);
+  const col=[];for(let i=0;i<6;i++){const b=document.createElement('b');b.className='k'+i;probe.appendChild(b);const c=(getComputedStyle(b).color.match(/\d+/g)||[0,0,0]).slice(0,3);col.push('#'+c.map(n=>(+n).toString(16).padStart(2,'0')).join(''))}
+  probe.remove();
+  const m={};'ABCDEF'.split('').forEach((L,i)=>{m['\\c'+L]='\\textcolor{'+col[i].slice(1)+'}{#1}'});
+  m['\\hl']='\\colorbox{fff0a8}{$#1$}';
+  /* short names for the maths a course keeps writing: sets, norms, derivatives, probability, linear algebra */
+  const sh={R:'\\mathbb{R}',N:'\\mathbb{N}',Z:'\\mathbb{Z}',Q:'\\mathbb{Q}',C:'\\mathbb{C}',E:'\\mathbb{E}',T:'^{\\top}',inv:'^{-1}',dd:'\\,\\mathrm{d}',given:'\\mid',
+    abs:'\\left|#1\\right|',norm:'\\left\\lVert #1\\right\\rVert',set:'\\left\\{#1\\right\\}',ip:'\\left\\langle #1,#2\\right\\rangle',
+    dv:'\\frac{\\mathrm{d}#1}{\\mathrm{d}#2}',pdv:'\\frac{\\partial #1}{\\partial #2}',eval:'\\left.#1\\right|_{#2}',vect:'\\mathbf{#1}',
+    Var:'\\operatorname{Var}',Cov:'\\operatorname{Cov}',tr:'\\operatorname{tr}',rank:'\\operatorname{rank}',diag:'\\operatorname{diag}',sign:'\\operatorname{sign}',
+    argmax:'\\operatorname*{arg\\,max}',argmin:'\\operatorname*{arg\\,min}'};
+  Object.keys(sh).forEach(k=>{m['\\'+k]=sh[k]});
+  return MJ[k]=m;
+}
+function mathR(tex,display,dark){
+  if(!window.katex)return '<code>'+esc(tex)+'</code>';
+  try{return katex.renderToString(tex,{displayMode:!!display,throwOnError:false,strict:false,output:'html',macros:Object.assign({},mathMacros(!!dark))})}
+  catch(e){return '<code>'+esc(tex)+'</code>'}
+}
 function fmt(s){
   if(s==null)return '';
-  return String(s)
+  const M=[];let t=String(s);
+  /* a $ opens maths only if a non-space follows it, and closes it only if a non-space precedes it and no digit follows:
+     "$1,000 and $2,000" stays money, "$3x+4=19$" is maths; write \$ for a literal dollar sign next to maths */
+  if(t.indexOf('$')>=0)t=t.replace(/\\\$/g,'\u0003').replace(/\$\$([\s\S]+?)\$\$|\$(?!\s)([^$\n]*?[^\s$])\$(?!\d)/g,(m,d,i)=>{M.push(d!=null?mathR(d,true):mathR(i,false));return '\u0001'+(M.length-1)+'\u0002'});
+  t=t
    .replace(/\[\[(\d)\|([^\]]+)\]\]/g,'<b class="k$1">$2</b>')
    .replace(/\*\*([^*]+)\*\*/g,'<b>$1</b>')
    .replace(/`([^`]+)`/g,'<code>$1</code>')
    .replace(/==([^=]+)==/g,'<mark>$1</mark>');
+  return (M.length?t.replace(/\u0001(\d+)\u0002/g,(m,i)=>M[+i]):t).replace(/\u0003/g,'$');
 }
+/* does this text hold real maths (not just money like "$1,000 and $2,000")? */
+const hasMath=s=>/\$\$[\s\S]+?\$\$|\$(?!\s)[^$\n]*?[^\s$]\$(?!\d)/.test(String(s).replace(/\\\$/g,'\u0003'));
 const fmtF=s=>String(s==null?'':s).replace(/\[\[(\d)\|([^\]]+)\]\]/g,'<b class="k$1">$2</b>');
 
 /* ---------- pixel icons ---------- */
@@ -275,7 +306,7 @@ function rMap(){
   const bd=Object.keys(BADGES).map(k=>'<div class="bd'+(S.badges[k]?'':' lock')+'">'+icon(BADGES[k][0],3)+'<span><b>'+BADGES[k][1]+'</b><br>'+BADGES[k][2]+'</span></div>').join('');
   const tree=CONLIST.length?'<div class="panel"><h2>Skill line</h2><p class="mut sm" style="margin-bottom:10px">Every concept, in the order you learn it. Pips fill when you answer questions about it correctly across different quests: that is the relearning.</p><div class="tree">'+CONLIST.map(c=>{const mp=mastery(c.id);return '<span class="cn m'+mp+'" title="Taught in quest '+(c.quest+1)+'"><b>'+esc(c.name)+'</b><span class="pips">'+[0,1,2].map(k=>'<i class="pp'+(k<mp?' on':'')+'"></i>').join('')+'</span></span>'}).join('')+'</div></div>':'';
   root.innerHTML='<div class="panel"><div class="chips"><span class="chip r">WORLD MAP</span></div><h1>'+esc(D.title)+'</h1><p class="mut" style="margin-top:8px">'+fmt(D.subtitle||'')+'</p>'+track(-1)+
-   '<div class="stats"><span class="stat2">'+icon('bolt',2)+'LV <b>'+lvl()+'</b></span><span class="stat2">'+icon('coin',2)+'<b>'+S.xp+'</b> XP</span><span class="stat2">'+icon('flame',2)+'STREAK <b>'+S.streak+'</b></span><span class="stat2">ANSWERED <b>'+tot+'</b>  RIGHT LAST TIME <b>'+right+'</b></span>'+(sids.length?'<span class="stat2">SOLVED <b>'+sdone+'/'+sids.length+'</b></span>':'')+'</div>'+
+   '<div class="stats"><span class="stat2">'+icon('bolt',2)+'LV <b>'+lvl()+'</b></span><span class="stat2">'+icon('coin',2)+'<b>'+S.xp+'</b> XP</span><span class="stat2">'+icon('flame',2)+'STREAK <b>'+S.streak+'</b></span><span class="stat2">ANSWERED <b>'+tot+'</b>  RIGHT LAST TIME <b>'+right+'</b></span>'+(sids.length?'<span class="stat2">SOLVED <b>'+sdone+'/'+sids.length+'</b></span>':'')+(sids.length&&D.solve_rating==='guide'?'<span class="stat2">ON MY OWN <b>'+sids.filter(id=>S.solves[id]&&S.solves[id].r==='got').length+'</b></span>':'')+'</div>'+
    '<div class="row"><button class="btn big" data-a="nb">'+(nb.q?esc(nb.t.slice(0,nb.t.length-nb.q.title.length))+'<span class="ut">'+esc(nb.q.title)+'</span>':esc(nb.t))+'</button><button class="btn ghost sm2" data-a="review">DAILY REVIEW ('+due+')</button><button class="btn ghost sm2" data-a="retry">RETRY MISSES ('+m+')</button>'+(redo.length?'<button class="btn ghost sm2" data-a="redo">REDO SOLVES ('+redo.length+')</button>':'')+'<button class="btn blue sm2" data-a="raid">BOSS RAID</button></div>'+
    '<div class="todo"><span>Before you start (optional):</span><label><input type="checkbox">phone out of reach</label><label><input type="checkbox">water</label><label><input type="checkbox">60 s of movement</label><label><input type="checkbox">timer on (T)</label></div></div>'+
    '<div class="qgrid">'+cards+'</div>'+tree+
@@ -295,7 +326,7 @@ function rQuest(){
   const chip=({mission:'MISSION',predict:'PREDICT',idea:'LEARN',decode:'DECODER',worked:'WORKED EXAMPLE',lab:'LAB',figure:'FIGURE',dump:'RECALL',question:'QUIZ',cards:'FLASHCARDS',recap:'RECAP',html:'LEARN',warmup:'WARM-UP',flow:'FLOW',compare:'COMPARE',solve:'YOUR TURN',code:'CODE'})[s.t]||'STEP';
   const where2=s.t==='question'?null:(s.source||((s.t==='mission'||s.t==='recap'||s.t==='warmup'||s.t==='cards')?null:q.source));
   const head='<div class="chips"><span class="chip r">'+chip+'</span><span class="chip">WORLD '+esc(q.world)+'  '+esc(q.title)+'</span>'+(where2?'<span class="chip src" title="Where this comes from">'+srcText(where2)+'</span>':'')+'</div>';
-  const R={mission:sMission,predict:sPredict,idea:sIdea,decode:sDecode,worked:sWorked,lab:sLab,figure:sFigure,dump:sDump,question:sQuestion,cards:sCards,recap:sRecap,html:sHtml,warmup:sWarmup,flow:sFlow,compare:sCompare,solve:sSolve,code:sCode}[s.t];
+  const R={mission:sMission,predict:sPredict,idea:sIdea,decode:sDecode,worked:sWorked,lab:sLab,figure:sFigure,dump:sDump,question:sQuestion,cards:sCards,recap:sRecap,html:sHtml,warmup:sWarmup,flow:sFlow,compare:sCompare,solve:sSolve,code:sCode,proof:sProof,graph:sGraph,spot:sSpot}[s.t];
   if(!R){root.innerHTML='<div class="panel">Unknown step type: '+esc(s.t)+'</div>';return}
   root.innerHTML='<div class="panel">'+head+'<div id="body"></div></div>';
   const body=$(root,'#body');R(body,q,s);
@@ -326,10 +357,11 @@ function gate(on){gated=on;if(V.v==='quest')navDraw()}
 function turnOn(el,quiet){el.classList.add('on');if(quiet)el.classList.add('nr');(el._with||[]).forEach(x=>{x.classList.add('on');if(quiet)x.classList.add('nr')})}
 function revealAll(){reveals.forEach(x=>turnOn(x));shown=reveals.length}
 /* every .rv block is one reveal; inside an illustration, elements marked data-s="1","2",... build up one stage per press */
-function collect(root){const out=[];$$(root,'.rv').forEach(r=>{out.push(r);const L=$$(r,'svg [data-s]');if(!L.length)return;const by={};L.forEach(l=>{(by[l.getAttribute('data-s')]=by[l.getAttribute('data-s')]||[]).push(l)});Object.keys(by).map(Number).sort((a,b)=>a-b).forEach(k=>{const g=by[k];g[0]._with=g.slice(1);out.push(g[0])})});return out}
+function collect(root){const out=[];$$(root,'.rv').forEach(r=>{out.push(r);const L=$$(r,'svg [data-s],.gcap[data-s]');if(!L.length)return;const by={};L.forEach(l=>{(by[l.getAttribute('data-s')]=by[l.getAttribute('data-s')]||[]).push(l)});Object.keys(by).map(Number).sort((a,b)=>a-b).forEach(k=>{const g=by[k];g[0]._with=g.slice(1);out.push(g[0])})});return out}
 
 const li=(arr,cls)=>'<ul class="lines">'+(arr||[]).map(l=>'<li class="rv">'+fmt(l)+'</li>').join('')+'</ul>';
 const co=(cls,label,txt)=>txt?'<div class="co '+cls+' rv"><small>'+label+'</small>'+fmt(txt)+'</div>':'';
+const ex=s=>co('int','INTUITION',s.intuition)+co('sc','SHORTCUT',s.shortcut)+co('chk','SANITY CHECK',s.check);
 function vizHtml(v){
   if(!v)return '';
   if(typeof v==='string')return '<div class="vizbox rv">'+v+'</div>';
@@ -341,7 +373,7 @@ function figHtml(s){
   return list.map(f=>'<figure class="rv"><img src="'+f.src+'" alt="'+esc(f.alt||f.caption||s.title||'figure')+'" data-zoom loading="lazy">'+((f.caption||f.credit)?'<figcaption>'+fmt(f.caption||'')+(f.credit?' <span class="mut credit">('+esc(f.credit)+')</span>':'')+'</figcaption>':'')+'<span class="zhint">tap picture to enlarge</span></figure>').join('');
 }
 const codeHtml=s=>s.code?'<pre class="codeblock rv" tabindex="0" data-noswipe><code>'+esc(s.code)+'</code></pre>':'';
-function sCode(b,q,s){b.innerHTML='<h2>'+fmt(s.title)+'</h2>'+li(s.lines)+codeHtml(s)+co('keep','KEEP THIS',s.keep)+co('trap','TRAP',s.trap)}
+function sCode(b,q,s){b.innerHTML='<h2>'+fmt(s.title)+'</h2>'+li(s.lines)+codeHtml(s)+co('keep','KEEP THIS',s.keep)+co('trap','TRAP',s.trap)+ex(s)}
 document.addEventListener('click',e=>{
   if(V.v!=='quest'||topOverlay())return;
   const im=e.target.closest('img[data-zoom]'),sv=!im&&e.target.closest('.vizbox svg:not(.plot)');
@@ -385,6 +417,11 @@ function sCompare(b,q,s){
   const H=s.headers||['A','B'];
   b.innerHTML='<h2>'+fmt(s.title)+'</h2>'+(s.intro?'<p>'+fmt(s.intro)+'</p>':'')+'<div class="cmp"><div class="crow chd"><span></span><span>'+fmt(H[0])+'</span><span>'+fmt(H[1])+'</span></div>'+(s.rows||[]).map(r=>'<div class="crow rv"><span class="cl">'+fmt(r[0])+'</span><span>'+fmt(r[1])+'</span><span>'+fmt(r[2])+'</span></div>').join('')+'</div>'+co('keep','KEEP THIS',s.keep)+co('trap','TRAP',s.trap);
 }
+/* self-rating after a solution is shown; course.solve_rating:"guide" asks "on my own, or with the answer guide?" */
+function rateHtml(){
+  const g=D.solve_rating==='guide';
+  return '<h3 style="margin-top:14px">'+(g?'DID YOU GET IT ON YOUR OWN, OR WITH THE ANSWER GUIDE? BE HONEST.':'HOW DID IT GO? BE HONEST.')+'</h3><div class="row"><button class="btn good sm2" data-r="got">'+(g?'ON MY OWN':'I GOT IT')+'</button><button class="btn blue sm2" data-r="hint">'+(g?'WITH THE ANSWER GUIDE':'GOT IT WITH HINTS')+'</button><button class="btn sm2" data-r="no">NOT YET</button></div>';
+}
 function sSolve(b,q,s){
   const id=q.id+'-s'+V.i,Hs=s.hints||[];let used=0;gate(!S.solves[id]);
   b.innerHTML='<h2>'+fmt(s.title||'Your turn')+'</h2><div class="prob">'+fmt(s.problem)+'</div><p class="mut">Work it out on paper first. Hints come one at a time and using them is fine: that is how the skill sticks.</p><div id="hs"></div><div class="row"><button class="btn ghost sm2" data-k="hint">HINT ('+Hs.length+' LEFT)</button><button class="btn blue sm2" data-k="show">SHOW SOLUTION</button></div><div id="sol" style="display:none"></div>';
@@ -392,7 +429,7 @@ function sSolve(b,q,s){
   hb.onclick=()=>{if(used<Hs.length){$(b,'#hs').insertAdjacentHTML('beforeend','<div class="co say"><small>HINT '+(used+1)+'</small>'+fmt(Hs[used])+'</div>');used++;hb.textContent='HINT ('+(Hs.length-used)+' LEFT)';if(used>=Hs.length)hb.disabled=true}};
   $(b,'[data-k=show]').onclick=e=>{
     e.target.disabled=true;hb.disabled=true;const sol=$(b,'#sol');sol.style.display='block';
-    sol.innerHTML='<ol class="steps">'+(s.steps||[]).map(x=>'<li><span class="sl">'+fmt(x.label)+'</span><span class="sw">'+fmt(x.work)+'</span></li>').join('')+'</ol><div class="final">'+fmt(s.answer)+'</div><h3 style="margin-top:14px">HOW DID IT GO? BE HONEST.</h3><div class="row"><button class="btn good sm2" data-r="got">I GOT IT</button><button class="btn blue sm2" data-r="hint">GOT IT WITH HINTS</button><button class="btn sm2" data-r="no">NOT YET</button></div>';
+    sol.innerHTML='<ol class="steps">'+(s.steps||[]).map(x=>wstep(x,false)).join('')+'</ol><div class="final">'+fmt(s.answer)+'</div>'+rateHtml();
     $$(sol,'[data-r]').forEach(bt=>bt.onclick=()=>{const r=bt.dataset.r;S.solves[id]={r,h:used};save();addXP(r==='got'?(used?5:8):r==='hint'?4:1,r==='no'?'honest rating':'solved');if(r==='no')toast('Saved. Redo it from the map when ready.');gate(false);$$(sol,'[data-r]').forEach(x=>x.disabled=true)});
   };
 }
@@ -402,20 +439,132 @@ function sPredict(b,q,s){
   $(b,'[data-k=lock]').onclick=e=>{e.target.style.display='none';$(b,'#pa').style.display='block';if(!S.hooks[id]){S.hooks[id]=1;addXP(3,'predicted first')}save()};
 }
 function sIdea(b,q,s){
-  b.innerHTML='<h2>'+fmt(s.title)+'</h2>'+li(s.lines)+vizHtml(s.viz)+figHtml(s)+codeHtml(s)+co('ana','THINK OF IT AS',s.analogy)+co('eg','EXAMPLE',s.example)+co('keep','KEEP THIS',s.keep)+co('trap','TRAP',s.trap);
+  b.innerHTML='<h2>'+fmt(s.title)+'</h2>'+li(s.lines)+vizHtml(s.viz)+figHtml(s)+codeHtml(s)+co('ana','THINK OF IT AS',s.analogy)+co('eg','EXAMPLE',s.example)+ex(s)+co('keep','KEEP THIS',s.keep)+co('trap','TRAP',s.trap);
 }
-function sHtml(b,q,s){b.innerHTML=(s.title?'<h2>'+fmt(s.title)+'</h2>':'')+'<div class="rv">'+s.html+'</div>'}
-function sFigure(b,q,s){b.innerHTML='<h2>'+fmt(s.title||'')+'</h2>'+li(s.lines)+(s.svg?'<div class="vizbox rv">'+s.svg+'</div>':'')+figHtml(s)+co('keep','KEEP THIS',s.keep)+co('trap','TRAP',s.trap)}
+function mathHtml(h){return String(h).indexOf('$')<0?h:String(h).replace(/\\\$/g,'\u0003').replace(/\$\$([\s\S]+?)\$\$|\$(?!\s)([^$<]*?[^\s$<])\$(?!\d)/g,(m,d,i)=>d!=null?mathR(d,true):mathR(i,false)).replace(/\u0003/g,'$')}
+/* shrink a display formula that is wider than its box (phones); never below 60%, then it scrolls */
+function fitMath(){document.querySelectorAll('.katex-display,.fbox.tex').forEach(function(d){var k=d.querySelector('.katex');if(!k)return;k.style.zoom='';var av=d.clientWidth,w=d.scrollWidth;if(av>0&&w>av+1){k.style.zoom=Math.max(.6,av/w).toFixed(3)}})}
+(function(){var t=0,go=function(){cancelAnimationFrame(t);t=requestAnimationFrame(fitMath)};
+ var init=function(){if(!document.body)return;new MutationObserver(go).observe(document.body,{childList:true,subtree:true});window.addEventListener('resize',go);window.addEventListener('load',go);if(document.fonts&&document.fonts.ready)document.fonts.ready.then(go);go()};
+ if(document.readyState==='loading')document.addEventListener('DOMContentLoaded',init);else init()})();
+function sHtml(b,q,s){b.innerHTML=(s.title?'<h2>'+fmt(s.title)+'</h2>':'')+'<div class="rv">'+mathHtml(s.html)+'</div>'+ex(s)}
+function sFigure(b,q,s){b.innerHTML='<h2>'+fmt(s.title||'')+'</h2>'+li(s.lines)+(s.svg?'<div class="vizbox rv">'+s.svg+'</div>':'')+figHtml(s)+codeHtml(s)+co('ana','THINK OF IT AS',s.analogy)+co('eg','EXAMPLE',s.example)+ex(s)+co('keep','KEEP THIS',s.keep)+co('trap','TRAP',s.trap)}
 function sDecode(b,q,s){
-  b.innerHTML='<h2>'+fmt(s.title)+'</h2>'+(s.intro?'<p>'+fmt(s.intro)+'</p>':'')+'<div class="fbox">'+fmtF(s.formula)+'</div>'+(s.read?'<p class="mut">Read it aloud: '+fmt(s.read)+'</p>':'')+
-   '<div class="syms">'+(s.parts||[]).map((p,i)=>'<div class="sy rv" style="--c:var(--k'+(i%6)+')"><div class="g">'+fmtF(p.sym)+'</div><div><div class="nm">'+fmt(p.name)+'</div><div>'+fmt(p.plain)+'</div>'+(p.effect?'<div class="ef">'+fmt(p.effect)+'</div>':'')+'</div></div>').join('')+'</div>'+
-   vizHtml(s.viz)+figHtml(s)+co('keep','KEEP THIS',s.note||s.keep)+co('trap','TRAP',s.trap);
+  const fm=s.tex?'<div class="fbox tex" data-noswipe>'+mathR(s.tex,true,true)+'</div>':'<div class="fbox">'+fmtF(s.formula)+'</div>';
+  b.innerHTML='<h2>'+fmt(s.title)+'</h2>'+(s.intro?'<p>'+fmt(s.intro)+'</p>':'')+fm+(s.read?'<p class="mut">Read it aloud: '+fmt(s.read)+'</p>':'')+
+   '<div class="syms">'+(s.parts||[]).map((p,i)=>'<div class="sy rv" style="--c:var(--k'+(i%6)+')"><div class="g">'+(hasMath(p.sym)?fmt(p.sym):fmtF(p.sym))+'</div><div><div class="nm">'+fmt(p.name)+'</div><div>'+fmt(p.plain)+'</div>'+(p.effect?'<div class="ef">'+fmt(p.effect)+'</div>':'')+'</div></div>').join('')+'</div>'+
+   vizHtml(s.viz)+figHtml(s)+ex(s)+co('keep','KEEP THIS',s.note||s.keep)+co('trap','TRAP',s.trap);
+}
+/* a worked / solved step: label, the working (text or $math$, a string or a list of lines), WHY it is done, optional extra html */
+function wstep(x,rv,wl){
+  const wk=Array.isArray(x.work)?x.work:[x.work==null?'':x.work];
+  const math=wk.some(w=>hasMath(w));
+  return '<li'+(rv?' class="rv"':'')+'><div class="wc"><span class="sl">'+fmt(x.label)+'</span><div class="sw'+(math?' mth':'')+'">'+(math?wk.map(w=>'<div class="wr">'+fmt(w)+'</div>').join(''):fmtF(fmt(wk.join(' '))))+'</div>'+
+   (x.why?'<div class="wy"><small>'+(wl||'WHY')+'</small><span>'+fmt(x.why)+'</span></div>':'')+(x.html||'')+'</div></li>';
 }
 function sWorked(b,q,s){
-  b.innerHTML='<h2>'+fmt(s.title)+'</h2><div class="prob">'+fmt(s.problem)+'</div><ol class="steps">'+(s.steps||[]).map(x=>'<li class="rv"><span class="sl">'+fmt(x.label)+'</span><span class="sw">'+fmtF(fmt(x.work))+'</span></li>').join('')+'</ol>'+
-   '<div class="final rv">'+fmt(s.answer)+'</div>'+vizHtml(s.viz);
+  b.innerHTML='<h2>'+fmt(s.title)+'</h2><div class="prob">'+fmt(s.problem)+'</div><ol class="steps">'+(s.steps||[]).map(x=>wstep(x,true)).join('')+'</ol>'+
+   '<div class="final rv">'+fmt(s.answer)+'</div>'+vizHtml(s.viz)+ex(s)+co('keep','KEEP THIS',s.keep)+co('trap','TRAP',s.trap);
 }
 function sFigureLab(){}
+
+/* ---------- maths steps: proof, graph, spot (find the mistake) ---------- */
+const PROOF_KIND={direct:'DIRECT PROOF',contradiction:'PROOF BY CONTRADICTION',induction:'PROOF BY INDUCTION',cases:'PROOF BY CASES',contrapositive:'PROOF BY CONTRAPOSITIVE',construction:'CONSTRUCTION',derivation:'DERIVATION'};
+/* proof: claim, optional given, the plan in one sentence, then every line with the REASON it is allowed; ends with the conclusion and a QED box */
+function sProof(b,q,s){
+  const kind=PROOF_KIND[s.kind]||(s.kind?String(s.kind).toUpperCase():'PROOF');
+  b.innerHTML='<h2>'+fmt(s.title)+'</h2><div class="prob"><small class="pk">'+esc(kind)+'</small>'+(s.given?'<div><b>Given:</b> '+fmt(s.given)+'</div>':'')+'<div><b>Claim:</b> '+fmt(s.claim)+'</div></div>'+
+   co('ana','THE PLAN IN ONE SENTENCE',s.plan)+
+   '<ol class="steps proof">'+(s.steps||[]).map(x=>wstep(Object.assign({},x,{why:x.why||x.reason}),true,'REASON')).join('')+'</ol>'+
+   '<div class="final qed rv">'+fmt(s.conclusion||'This is exactly what we wanted to show.')+' <span class="qedbox">&#8718;</span></div>'+ex(s)+co('keep','KEEP THIS',s.keep)+co('trap','TRAP',s.trap);
+}
+/* spot: a worked solution with a planted mistake. Tap the line you think is wrong; the engine tells you why that line is right or wrong */
+function sSpot(b,q,s){
+  const id=q.id+'-x'+V.i,st=s.steps||[],need=st.filter(x=>x.wrong).length||1,found=new Set();let tries=0;
+  const prior=S.spot[id],done0=!!prior;gate(!done0);
+  const lineHtml=(x,i)=>{const wk=Array.isArray(x.work)?x.work:[x.work==null?'':x.work],math=wk.some(w=>hasMath(w));
+    return '<li class="sp" data-i="'+i+'" tabindex="0" role="button"><div class="wc"><span class="sl">'+fmt(x.label||('Line '+(i+1)))+'</span><div class="sw'+(math?' mth':'')+'">'+(math?wk.map(w=>'<div class="wr">'+fmt(w)+'</div>').join(''):fmtF(fmt(wk.join(' '))))+'</div><div class="spf"></div></div></li>'};
+  b.innerHTML='<h2>'+fmt(s.title||'Find the mistake')+'</h2><div class="prob">'+fmt(s.problem)+'</div><p class="mut">'+fmt(s.intro||(need>1?'This solution has '+need+' mistakes. Tap each line you think is wrong.':'This solution has ONE mistake. Tap the line you think is wrong. Say why before you tap.'))+'</p><ol class="steps spot">'+st.map(lineHtml).join('')+'</ol><div id="spo"></div><div class="row"><button class="btn ghost sm2" data-k="show">SHOW ME THE MISTAKE</button></div>';
+  const lis=$$(b,'li.sp'),out=$(b,'#spo');
+  function mark(i,good,quiet){
+    const x=st[i],li=lis[i],f=$(li,'.spf');li.classList.add(x.wrong?'bad':'fine');
+    f.innerHTML=x.wrong?'<div class="wy bad"><small>THE MISTAKE</small><span>'+fmt(x.mistake||x.why||'This line breaks a rule.')+'</span></div>'+(x.fix?'<div class="wy fixd"><small>CORRECT LINE</small><span>'+(Array.isArray(x.fix)?x.fix:[x.fix]).map(w=>'<div class="wr">'+fmt(w)+'</div>').join('')+'</span></div>':''):'<div class="wy"><small>THIS LINE IS FINE</small><span>'+fmt(x.why||'Nothing wrong here: it follows from the line before.')+'</span></div>';
+    if(x.wrong)found.add(i);
+  }
+  function finish(quiet){
+    gate(false);$$(b,'li.sp').forEach(l=>l.classList.add('locked'));$(b,'[data-k=show]').style.display='none';
+    out.innerHTML='<div class="final">'+fmt(s.answer||'Mistake found.')+'</div>'+(s.lesson?'<div class="co keep"><small>KEEP THIS</small>'+fmt(s.lesson)+'</div>':'');
+    if(!quiet&&!S.spot[id]){S.spot[id]={t:tries};addXP(tries===0?8:tries===1?5:3,tries===0?'spotted it first try':'spotted it');save()}
+  }
+  if(done0){st.forEach((x,i)=>{if(x.wrong)mark(i,true,true)});finish(true);return}
+  function pick(i){
+    if(lis[i].classList.contains('bad')||lis[i].classList.contains('fine'))return;
+    if(st[i].wrong){SND.ok();mark(i,true);if(found.size>=need)finish(false);else out.innerHTML='<div class="co say"><small>'+found.size+' OF '+need+' FOUND</small>Keep going: there is another one.</div>'}
+    else{tries++;SND.bad();S.combo=0;mark(i,false);out.innerHTML='<div class="co say"><small>NOT THAT ONE</small>That line is correct (read the note under it). Try another line.</div>'}
+  }
+  lis.forEach((l,i)=>{l.onclick=()=>pick(i);l.onkeydown=e=>{if(e.key==='Enter'||e.key===' '){e.preventDefault();e.stopPropagation();pick(i)}}});
+  $(b,'[data-k=show]').onclick=()=>{tries=Math.max(tries,2);st.forEach((x,i)=>{if(x.wrong&&!found.has(i))mark(i,true)});finish(false)};
+}
+/* graph: a function plot for calculus, algebra and statistics. Curves, points, tangents, secants, shaded areas, Riemann rectangles and
+   vertical/horizontal lines, each with a "stage" (1, 2, 3...) so the picture builds one press at a time with a caption per stage */
+let GID=0;
+function graphSvg(G){
+  const W=640,H=340,L=56,B=40,T=14,Rr=16,x0=G.x[0],x1=G.x[1],y0=G.y[0],y1=G.y[1],id='gc'+(++GID),par=G.params||{},names=['x'].concat(Object.keys(par));
+  const sx=x=>L+(x-x0)/(x1-x0)*(W-L-Rr),sy=y=>H-B-(y-y0)/(y1-y0)*(H-B-T);
+  const col=c=>typeof c==='number'?PL.series[c%PL.series.length]:(c||PL.series[0]);
+  const stg=(n,h)=>n?'<g data-s="'+n+'">'+h+'</g>':h;
+  const F=(G.functions||[]).map((f,i)=>Object.assign({color:i},f,{fn:compile(f.expr,names)}));
+  const val=(fi,x)=>F[fi].fn(Object.assign({},par,{x}));
+  const f6=v=>(+v.toFixed(5)).toString();
+  let g='<defs><clipPath id="'+id+'"><rect x="'+L+'" y="'+T+'" width="'+(W-L-Rr)+'" height="'+(H-B-T)+'"/></clipPath></defs>';
+  const ys=niceStep((y1-y0)/5),xs=niceStep((x1-x0)/6),lab=(x,y,t,a)=>'<text x="'+x+'" y="'+y+'" text-anchor="'+(a||'middle')+'" font-size="19" font-family="'+PL.font+'" fill="'+PL.axis+'">'+esc(t)+'</text>';
+  for(let v=Math.ceil(y0/ys-1e-9)*ys;v<=y1+ys*1e-6;v+=ys){const y=sy(v);g+='<line x1="'+L+'" y1="'+y+'" x2="'+(W-Rr)+'" y2="'+y+'" stroke="'+PL.grid+'" stroke-width="2"/>'+lab(L-8,y+5,axisFmt(+f6(v)),'end')}
+  for(let v=Math.ceil(x0/xs-1e-9)*xs;v<=x1+xs*1e-6;v+=xs){const x=sx(v);g+='<line x1="'+x+'" y1="'+T+'" x2="'+x+'" y2="'+(H-B)+'" stroke="'+PL.grid+'" stroke-width="2"/>'+lab(x,H-B+22,axisFmt(+f6(v)))}
+  if(y0<0&&y1>0)g+='<line x1="'+L+'" y1="'+sy(0)+'" x2="'+(W-Rr)+'" y2="'+sy(0)+'" stroke="'+PL.ink+'" stroke-width="2.5"/>';
+  if(x0<0&&x1>0)g+='<line x1="'+sx(0)+'" y1="'+T+'" x2="'+sx(0)+'" y2="'+(H-B)+'" stroke="'+PL.ink+'" stroke-width="2.5"/>';
+  g+='<rect x="'+L+'" y="'+T+'" width="'+(W-L-Rr)+'" height="'+(H-B-T)+'" fill="none" stroke="'+PL.ink+'" stroke-width="'+PL.bw+'" rx="'+(PL.bw<3?8:0)+'"/>';
+  const N=320,span=y1-y0;
+  function segs(fi){const out=[];let cur=[],prev=null;
+    for(let i=0;i<=N;i++){const x=x0+(x1-x0)*i/N,y=val(fi,x);
+      if(!isFinite(y)||Math.abs(y)>1e7){if(cur.length>1)out.push(cur);cur=[];prev=null;continue}
+      if(prev!==null&&Math.abs(y-prev)>span*4){if(cur.length>1)out.push(cur);cur=[]}
+      cur.push([x,y]);prev=y}
+    if(cur.length>1)out.push(cur);return out}
+  const clip=' clip-path="url(#'+id+')"',poly=(pts,fill,stroke,w,op)=>'<polygon'+clip+' points="'+pts.map(p=>sx(p[0]).toFixed(1)+','+sy(p[1]).toFixed(1)).join(' ')+'" fill="'+fill+'" fill-opacity="'+(op||.28)+'" stroke="'+(stroke||'none')+'" stroke-width="'+(w||0)+'"/>';
+  const line=(ax,ay,bx,by,c,w,dash)=>'<line'+clip+' x1="'+sx(ax).toFixed(1)+'" y1="'+sy(ay).toFixed(1)+'" x2="'+sx(bx).toFixed(1)+'" y2="'+sy(by).toFixed(1)+'" stroke="'+c+'" stroke-width="'+w+'" stroke-linecap="round"'+(dash?' stroke-dasharray="'+dash+'"':'')+'/>';
+  const dot=(x,y,c)=>'<circle cx="'+sx(x).toFixed(1)+'" cy="'+sy(y).toFixed(1)+'" r="7" fill="'+c+'" stroke="'+PL.ink+'" stroke-width="'+PL.mw+'"/>';
+  const txt=(x,y,t,c,a)=>'<text x="'+sx(x).toFixed(1)+'" y="'+sy(y).toFixed(1)+'" text-anchor="'+(a||'start')+'" font-size="19" font-family="'+PL.font+'" font-weight="bold" fill="'+c+'" stroke="#fff" stroke-width="3" paint-order="stroke">'+esc(t)+'</text>';
+  const slope=(fi,x)=>{const h=(x1-x0)*1e-5;return (val(fi,x+h)-val(fi,x-h))/(2*h)};
+  /* shaded areas and rectangles go first so curves sit on top */
+  (G.shades||[]).forEach(sh=>{
+    const fi=sh.fn||0,a=sh.from,b=sh.to,c=col(sh.color!=null?sh.color:F[fi]&&F[fi].color),base=x=>sh.to_fn!=null?val(sh.to_fn,x):(sh.base||0);let h='';
+    if(sh.n){const n=sh.n,dx=(b-a)/n,mode=sh.mode||'left';
+      for(let i=0;i<n;i++){const xa=a+i*dx,xb=xa+dx,xe=mode==='right'?xb:mode==='mid'?xa+dx/2:xa,hh=val(fi,xe),bb=base(xe);if(!isFinite(hh))continue;
+        h+=poly([[xa,bb],[xa,hh],[xb,hh],[xb,bb]],c,c,2,.3)}}
+    else{const up=[],dn=[];for(let i=0;i<=120;i++){const x=a+(b-a)*i/120,y=val(fi,x);if(isFinite(y))up.push([x,y]);dn.unshift([x,base(x)])}h+=poly(up.concat(dn),c,'none',0,.3)}
+    if(sh.label){const mx=(a+b)/2,my=(val(fi,mx)+base(mx))/2;if(isFinite(my))h+=txt(mx,my,sh.label,PL.ink,'middle')}
+    g+=stg(sh.stage,h)});
+  (G.vlines||[]).forEach(v=>{g+=stg(v.stage,line(v.x,y0,v.x,y1,col(v.color!=null?v.color:2),2.5,'7 6')+(v.label?txt(v.x,y1-span*.06,v.label,PL.ink,'middle'):''))});
+  (G.hlines||[]).forEach(v=>{g+=stg(v.stage,line(x0,v.y,x1,v.y,col(v.color!=null?v.color:2),2.5,'7 6')+(v.label?txt(x0+(x1-x0)*.02,v.y+span*.03,v.label,PL.ink,'start'):''))});
+  F.forEach((f,fi)=>{let h='';segs(fi).forEach(sg=>{h+='<polyline'+clip+' fill="none" stroke="'+col(f.color)+'" stroke-width="'+PL.lw+'" stroke-linecap="round" stroke-linejoin="round"'+(f.dash?' stroke-dasharray="9 7"':'')+' points="'+sg.map(p=>sx(p[0]).toFixed(1)+','+sy(p[1]).toFixed(1)).join(' ')+'"/>'});
+    if(f.label&&F.length>1)h+='<rect x="'+(L+10)+'" y="'+(T+8+fi*22)+'" width="14" height="14" fill="'+col(f.color)+'"/><text x="'+(L+30)+'" y="'+(T+20+fi*22)+'" font-size="19" font-family="'+PL.font+'" fill="'+PL.ink+'">'+esc(f.label)+'</text>';
+    g+=stg(f.stage,h)});
+  (G.secants||[]).forEach(s=>{const fi=s.fn||0,a=s.a,b=s.b,ya=val(fi,a),yb=val(fi,b),c=col(s.color!=null?s.color:3),m=(yb-ya)/(b-a);
+    g+=stg(s.stage,line(x0,ya+m*(x0-a),x1,ya+m*(x1-a),c,3,'10 6')+dot(a,ya,c)+dot(b,yb,c)+(s.label?txt(b-(x1-x0)*.015,yb+span*.04,s.label,PL.ink,'end'):''))});
+  (G.tangents||[]).forEach(t=>{const fi=t.fn||0,a=t.at,ya=val(fi,a),m=slope(fi,a),c=col(t.color!=null?t.color:1);
+    g+=stg(t.stage,line(x0,ya+m*(x0-a),x1,ya+m*(x1-a),c,3.5)+dot(a,ya,c)+txt(a+(x1-x0)*.03,ya-span*.07,t.label===false?'':(t.label||'slope = '+(+m.toFixed(2))),PL.ink,'start'))});
+  (G.points||[]).forEach(p=>{const y=p.y!=null?p.y:val(p.on||0,p.x),c=col(p.color!=null?p.color:0);
+    g+=stg(p.stage,dot(p.x,y,c)+(p.label?txt(p.x+(x1-x0)*.015,y+span*.05,p.label,PL.ink,'start'):''))});
+  (G.texts||[]).forEach(t=>{g+=stg(t.stage,txt(t.x,t.y,t.t,col(t.color!=null?t.color:'#12213f'),t.anchor||'middle'))});
+  g+=(G.xlabel?'<text x="'+((L+W-Rr)/2)+'" y="'+(H-6)+'" text-anchor="middle" font-size="19" font-family="'+PL.font+'" fill="'+PL.ink+'">'+esc(G.xlabel)+'</text>':'')+(G.ylabel?'<text transform="translate(14 '+((T+H-B)/2)+') rotate(-90)" text-anchor="middle" font-size="19" font-family="'+PL.font+'" fill="'+PL.ink+'">'+esc(G.ylabel)+'</text>':'');
+  return '<svg class="plot gplot" viewBox="0 0 '+W+' '+H+'" width="100%" role="img" aria-label="'+esc(G.alt||G.title||'graph')+'">'+g+'</svg>';
+}
+function sGraph(b,q,s){
+  const caps=s.captions||{},ks=Object.keys(caps).map(Number).sort((a,b)=>a-b);
+  b.innerHTML='<h2>'+fmt(s.title)+'</h2>'+(s.intro?'<p>'+fmt(s.intro)+'</p>':'')+
+   '<div class="vizbox rv gwrap">'+graphSvg(s)+(ks.length?'<div class="gcaps">'+ks.map(k=>'<p class="gcap" data-s="'+k+'"><b class="gn">'+k+'</b> '+fmt(caps[k])+'</p>').join('')+'</div>':'')+'</div>'+
+   li(s.lines)+co('ana','THINK OF IT AS',s.analogy)+ex(s)+co('keep','KEEP THIS',s.keep)+co('trap','TRAP',s.trap);
+}
 
 /* ---------- lab (sliders + live outputs + plot/svg) ---------- */
 const MATHN=Object.getOwnPropertyNames(Math);
@@ -625,7 +774,7 @@ addEventListener('keydown',e=>{
    - not from the very edge of the screen (the phone's own back gesture lives there)
    - long enough (130 px), mostly horizontal (dx > 2.2 dy) and quick (under 700 ms)
    Turn it off completely in Menu if you still hit it by mistake. */
-const SWIPE_STOP='input,textarea,select,button,a,pre,code,.fbox,.lab,.plot,.ctl,.track,.fcard,.opts,.gl-list,.ov,[data-noswipe]';
+const SWIPE_STOP='input,textarea,select,button,a,pre,code,.fbox,.lab,.plot,.ctl,.track,.fcard,.opts,.gl-list,.ov,.katex-display,.mth,[data-noswipe]';
 function sideways(el){for(let n=el;n&&n!==document.body&&n.nodeType===1;n=n.parentElement){
   if(n.matches(SWIPE_STOP))return true;
   if(n.scrollWidth>n.clientWidth+2){const ox=getComputedStyle(n).overflowX;if(ox==='auto'||ox==='scroll')return true}}return false}
